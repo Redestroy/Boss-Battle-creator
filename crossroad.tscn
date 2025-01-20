@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://dqqokjx2ofgiv"]
+
+[ext_resource type="PackedScene" uid="uid://bsk1todcmqyk6" path="res://Assets/Meshes/Blender/Crossroad.blend" id="1_6f8ag"]
+
+[node name="Crossroad" instance=ExtResource("1_6f8ag")]
+
+[node name="Light" parent="." index="1"]
+visible = false
+
+[node name="Camera" parent="." index="2"]
+visible = false

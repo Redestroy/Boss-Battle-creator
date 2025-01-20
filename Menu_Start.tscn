@@ -1,0 +1,80 @@
+[gd_scene load_steps=7 format=3 uid="uid://cm347bt1ijhip"]
+
+[ext_resource type="Script" path="res://Menu_Start.cs" id="1_uwr7a"]
+[ext_resource type="Texture2D" uid="uid://qn8gcfyjituj" path="res://Assets/Menus/TextImg/Labyrinth.png" id="2_3c661"]
+[ext_resource type="Texture2D" uid="uid://d1q5lhwlubpso" path="res://Assets/Menus/TextImg/Play.png" id="3_yh8xm"]
+[ext_resource type="Texture2D" uid="uid://dsohqwhjvq4q7" path="res://Assets/Menus/TextImg/Library.png" id="4_mik54"]
+[ext_resource type="Texture2D" uid="uid://covxwn1offjad" path="res://Assets/Menus/TextImg/Options.png" id="5_gseyp"]
+[ext_resource type="Texture2D" uid="uid://ceqp1ycnoujvs" path="res://Assets/Menus/TextImg/About.png" id="6_a58dw"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_uwr7a")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = -3.0
+offset_top = 4.0
+offset_right = 1149.0
+offset_bottom = 652.0
+
+[node name="Title" type="TextureRect" parent="TextureRect"]
+layout_mode = 0
+offset_left = 88.0
+offset_top = 69.0
+offset_right = 1093.0
+offset_bottom = 254.0
+texture = ExtResource("2_3c661")
+
+[node name="Play" type="TextureButton" parent="TextureRect"]
+layout_mode = 0
+offset_left = 519.0
+offset_top = 305.0
+offset_right = 799.0
+offset_bottom = 424.0
+scale = Vector2(0.6, 0.6)
+texture_normal = ExtResource("3_yh8xm")
+
+[node name="Library" type="TextureButton" parent="TextureRect"]
+layout_mode = 0
+offset_left = 457.0
+offset_top = 382.0
+offset_right = 953.0
+offset_bottom = 505.0
+scale = Vector2(0.6, 0.6)
+texture_normal = ExtResource("4_mik54")
+
+[node name="Options" type="TextureButton" parent="TextureRect"]
+layout_mode = 0
+offset_left = 477.0
+offset_top = 458.0
+offset_right = 902.0
+offset_bottom = 575.0
+scale = Vector2(0.6, 0.6)
+texture_normal = ExtResource("5_gseyp")
+
+[node name="About" type="TextureButton" parent="TextureRect"]
+layout_mode = 0
+offset_left = 499.0
+offset_top = 525.0
+offset_right = 856.0
+offset_bottom = 648.0
+scale = Vector2(0.6, 0.6)
+texture_normal = ExtResource("6_a58dw")
+
+[node name="Version" type="Label" parent="TextureRect"]
+layout_mode = 0
+offset_left = 1039.0
+offset_top = 2.0
+offset_right = 1152.0
+offset_bottom = 25.0
+
+[connection signal="pressed" from="TextureRect/Play" to="." method="_on_play_pressed"]
+[connection signal="pressed" from="TextureRect/Library" to="." method="_on_library_pressed"]
+[connection signal="pressed" from="TextureRect/Options" to="." method="_on_options_pressed"]
+[connection signal="pressed" from="TextureRect/About" to="." method="_on_about_pressed"]

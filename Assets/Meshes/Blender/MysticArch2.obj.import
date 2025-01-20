@@ -1,0 +1,22 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://b1boctr25wkxh"
+path="res://.godot/imported/MysticArch2.obj-7b18d47b1fb523e91286dffa6d559014.mesh"
+
+[deps]
+
+files=["res://.godot/imported/MysticArch2.obj-7b18d47b1fb523e91286dffa6d559014.mesh"]
+
+source_file="res://Assets/Meshes/Blender/MysticArch2.obj"
+dest_files=["res://.godot/imported/MysticArch2.obj-7b18d47b1fb523e91286dffa6d559014.mesh", "res://.godot/imported/MysticArch2.obj-7b18d47b1fb523e91286dffa6d559014.mesh"]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+optimize_mesh=true
+force_disable_mesh_compression=false

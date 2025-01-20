@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://bsjyykvn8rkkb"]
+
+[ext_resource type="PackedScene" uid="uid://c3xm2182ic5lm" path="res://Assets/Meshes/Blender/Field.blend" id="1_gt1xy"]
+
+[node name="Field" instance=ExtResource("1_gt1xy")]

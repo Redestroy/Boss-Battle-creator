@@ -1,0 +1,22 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://cw2tw4h2isp7q"
+path="res://.godot/imported/Field.obj-ef0ab5b27a0adf4e7d8fbafac10be8fc.mesh"
+
+[deps]
+
+files=["res://.godot/imported/Field.obj-ef0ab5b27a0adf4e7d8fbafac10be8fc.mesh"]
+
+source_file="res://Assets/Meshes/Blender/Field.obj"
+dest_files=["res://.godot/imported/Field.obj-ef0ab5b27a0adf4e7d8fbafac10be8fc.mesh", "res://.godot/imported/Field.obj-ef0ab5b27a0adf4e7d8fbafac10be8fc.mesh"]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+optimize_mesh=true
+force_disable_mesh_compression=false

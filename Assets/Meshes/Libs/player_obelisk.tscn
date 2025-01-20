@@ -1,0 +1,5 @@
+[gd_scene load_steps=2 format=3 uid="uid://c23u18n4vohnq"]
+
+[ext_resource type="PackedScene" uid="uid://j8rex4dj6c7p" path="res://Assets/Meshes/Blender/PlayerObelisk.blend" id="1_wwtum"]
+
+[node name="PlayerObelisk" instance=ExtResource("1_wwtum")]
