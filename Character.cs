@@ -1,12 +1,14 @@
 // TODO character functionality
 // 1) Animation player (With an animation deck)                             // TODO - load in animations from external file
 // 2) Move deck - Dictionary with string tokens and function calls          // Currently move aliases, uses executors
-// 3) Collisions - Deal with collisions of the character                    // Kinda done, relies on abstract methods
-// 4) Movement - Deal with character movement and movement calculations     // Kinda done, needs testing and may need changes
+// 3) Collisions - Deal with collisions of the character                    // Kinda done, relies on abstract methods         - Find a way to disable collisions with children
+// 4) Movement - Deal with character movement and movement calculations     // Testing, needs testing and may need changes    - Need to add shorthand check for the movement executor 
 // 5) Rescale                                                               // TODO - implement    
 // 6) Spawn                                                                 // Kinda done, relies on abstract methods
 // 7) Constrain                                                             // TODO - add
 // 8) Add core marker                                                       // TODO - add
+// 9) Activity tracker                                                      // TODO - add
+
 
 using Godot;
 using System;
@@ -176,7 +178,7 @@ public class MovementExecutor{
                 Fly(FlySpeed);
             break;
             default:
-            GD.Print("Action not supported");
+            GD.Print($"Action not supported {parts[0]}");
             break;
         }
     }
@@ -233,10 +235,12 @@ public abstract partial class Character : CharacterBody3D
     private AnimationPlayer animationPlayer;
     private MovementExecutor movementExecutor;
 	Dictionary<string, Animation> animation_deck;
-	//Dictionary<string, Move> move_deck;
+	Dictionary<string, Move> move_deck;
+    List<string> move_keys;
     Dictionary<string, string> move_deck_aliases;
-    Dictionary<int, string> move_deck_ids;
+    public Dictionary<int, string> move_deck_ids;
     private double last_delta;
+    private bool is_ready = false;
 
     public override void _Ready()
 	{
@@ -250,8 +254,10 @@ public abstract partial class Character : CharacterBody3D
 
         // Load animations
         // animation_deck = LoadAnimations("file_name");
+        //move_keys = new List<string>();
+        move_keys = LoadMoveKeys();
         move_deck_aliases = new Dictionary<string, string>();
-        LoadAliases(move_deck_aliases);
+        move_deck_aliases = LoadAliases();
         move_deck_ids = new Dictionary<int, string>();
         LoadIds(move_deck_aliases);
         last_delta = 0.0;
@@ -262,26 +268,26 @@ public abstract partial class Character : CharacterBody3D
         //move_deck_aliases["ULT"] = "Bloodcleave";
         // How it should be done
         // move_deck = LoadMoveDeck("file_name");
-
+        is_ready = true;
     }
 
     public override void _Process(double delta)
     {
         base._Process(delta);
         last_delta = delta;
-		OnUpdate(delta);
+        if(is_ready) OnUpdate(delta);
     }
 
-    public void OnUpdate(double delta){
+    public virtual void OnUpdate(double delta){
 		//string current_animation = animationPlayer.CurrentAnimation;
 		//if(!move_deck_aliases.ContainsValue(current_animation)){ //change to default named animation
 		//	Random rand = new Random();
 		//	animationPlayer.Play(move_deck_aliases[move_deck_ids[rand.Next(0, move_deck_ids.Keys.Count)]]);
 		//}
         movementExecutor.OnUpdate(delta, Velocity, Transform, IsOnFloor());
-        int id = GetCurrentMove();
-        Move(id);
-        DoMoveAndCollide();
+        //int id = GetCurrentMove();
+        //Move(id);
+        //DoMoveAndCollide();
 		//observation = get_observation(world_signal); //??
 		//UpdateState(observation);
 		//action = get_action();
@@ -322,8 +328,17 @@ public abstract partial class Character : CharacterBody3D
         // MoveAndCollider -- String: Vectors to String
         // SignalEmitter -- String: signal name in Signal dictionary
         // EffectApplicator -- String: Effect to apply, value in parenthesis
-        string executor = move_alias.Substring(0, move_alias.Find("|"));
-        string order = move_alias.Substring(move_alias.Find("|")+1);
+        if(!move_deck_aliases.ContainsKey(move_alias)){
+            GD.Print("Key not in dict " + move_alias);
+            return;
+        }
+        int split = move_deck_aliases[move_alias].Find("/");
+        if(split == -1){
+            GD.PrintErr("Bad move token " + move_alias);
+            return;
+        }
+        string executor = move_deck_aliases[move_alias].Substring(0, split);
+        string order = move_deck_aliases[move_alias].Substring(split+1);
         switch(executor){
             case "AnimationPlayer":
                 animationPlayer.Play(order);
@@ -343,12 +358,20 @@ public abstract partial class Character : CharacterBody3D
         }
     }
 
-    public void DoMovement(){
-        // Set velocities
-    }
-
     public string GetName(){
         return "character";
+    }
+
+    public void AddAnimationsToMoveKeys(){
+        animationPlayer.GetAnimationList();
+        foreach(var animation in animationPlayer.GetAnimationList()){
+            move_keys.Add($"AnimationPlayer/{animation}");
+        }
+    }
+
+    public List<string> GetMoveKeys(){
+        //Currently using move keys from a separate list
+        return move_keys;
     }
 
     public AnimationPlayer CreateAnimationPlayer(Node node_parent){
@@ -428,7 +451,8 @@ public abstract partial class Character : CharacterBody3D
     public abstract int GetCurrentMove();
     public abstract Marker3D FindMarker(string node_name);
     public abstract void Execute(string executor, string order);
-    public abstract void LoadAliases(Dictionary<string, string> move_deck_aliases);
+    public abstract List<string> LoadMoveKeys();
+    public abstract Dictionary<string, string> LoadAliases();
     public abstract Marker3D GetSpawn();
     public abstract string GetScenePath();
     public abstract void Spawn(Marker3D spot);

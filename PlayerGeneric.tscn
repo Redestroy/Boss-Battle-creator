@@ -1,6 +1,7 @@
-[gd_scene load_steps=9 format=3 uid="uid://7lgd033g0ab"]
+[gd_scene load_steps=10 format=3 uid="uid://7lgd033g0ab"]
 
 [ext_resource type="Script" path="res://PlayerGeneric.cs" id="1_8qe6d"]
+[ext_resource type="PackedScene" uid="uid://dpf1uemx8po85" path="res://WeaponChakram.tscn" id="2_xxkxc"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_p8sg2"]
 
@@ -22,7 +23,7 @@ albedo_color = Color(1, 0.0196078, 0.152941, 1)
 
 [node name="Player" type="CharacterBody3D"]
 collision_layer = 2
-collision_mask = 255
+collision_mask = 191
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 axis_lock_angular_z = true
@@ -52,7 +53,10 @@ mesh = SubResource("BoxMesh_jwpb5")
 
 [node name="WeaponPivot" type="Marker3D" parent="Pivot"]
 
-[node name="Weapon" type="Node3D" parent="Pivot/WeaponPivot"]
+[node name="Weapon" parent="Pivot/WeaponPivot" instance=ExtResource("2_xxkxc")]
+collision_layer = 64
+collision_mask = 188
+Damage = 0
 
 [node name="Marker3D" type="Marker3D" parent="."]
 transform = Transform3D(0.996565, -0.0486781, 0.0669898, 4.93162e-10, 0.808976, 0.587842, -0.0828081, -0.585823, 0.806198, 0.00804335, 0.18091, 0.41099)

@@ -44,6 +44,8 @@ mesh = SubResource("BoxMesh_cjeir")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 8.45277)
 platform_on_leave = 2
 safe_margin = 0.3
+is_active = true
+scene_path = "res://PlayerGeneric.tscn"
 
 [node name="GridMap2" type="GridMap" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5, 0)

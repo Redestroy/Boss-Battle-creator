@@ -2,6 +2,8 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.IO;
+using System.Linq;
 
 // TODO player functionality
 // 1) Input mapping
@@ -10,6 +12,8 @@ using System.ComponentModel.Design;
 // 4) Inventory
 // 5) Ext. Targetable/ish, Character
 // 6) 
+
+// NOTE minor limit - cannot create files in non existing directories.
 
 public partial class Player : Character{
 
@@ -29,6 +33,8 @@ public partial class Player : Character{
 
 	public static bool player_selected = false;
 
+	private int current_move = 0;
+
 	// Get the gravity from the project settings to be synced with RigidBody nodes.
 	public float gravity = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
 
@@ -41,8 +47,11 @@ public partial class Player : Character{
 	private RayCast3D raycast;
 	private float rayLength = 10.0f; // Length of the ray
 
+	public Dictionary<string, string> input_map;
+
 	public override void _Ready()
 	{
+		base._Ready();
 		if(!player_selected){
 			// Select first player as active
 			GD.Print("Player selected as active");
@@ -58,58 +67,19 @@ public partial class Player : Character{
 
 	public override void _PhysicsProcess(double delta)
 	{
+		base._PhysicsProcess(delta);
 		Vector3 velocity = Velocity;
-
 		_space_state = GetWorld3D().DirectSpaceState;
 
 
 		if (is_active && !constrained && alive){
-		if (Input.IsActionPressed("FWD"))
-    	{
-			play_action("FWD");
-    	}
-
-
-		if (Input.IsActionPressed("BWD"))
-    	{
-        	play_action("BWD");
-		}
-
-		if (Input.IsActionPressed("LEFT"))
-    	{
-        	play_action("LEFT");
-		}
-
-		if (Input.IsActionPressed("RIGHT"))
-    	{
-        	play_action("RIGHT");
-		}
-
-		if (Input.IsActionPressed("JUMP"))
-    	{
-        	play_action("JUMP");
-		}
-
-		if (Input.IsActionPressed("ULT"))
-    	{
-        	play_action("ULT");
-		}
-
-		if (Input.IsActionPressed("ABILITY"))
-    	{
-        	play_action("ABILITY");
-		}
-
-		if (Input.IsActionPressed("LACTION"))
-    	{
-        	play_action("LACTION");
-		}
-
-		if (Input.IsActionPressed("RACTION"))
-    	{
-        	play_action("RACTION");
-		}
 		
+		foreach (var key in input_map.Keys){
+			if (Input.IsActionPressed(key))
+    		{
+				play_action(input_map[key]);
+    		}
+		}
 		//raycast. .CastTo = new Vector3(0, -rayLength, 0); // Pointing downwards
         //raycast.Enabled = true;
 
@@ -133,9 +103,11 @@ public partial class Player : Character{
 		return active_player;
 	}
 
-	public void play_action(string action_tag){
+	public void play_action(string action_tag){ // action tag is actually move already, leaving for testing but may change later
 		float d_rot = 0.15f;
 		float d_mov = 0.15f;
+		Move(action_tag);
+		/*
 		if (action_tag == "LEFT"){
 			rotate(d_rot);
 		}
@@ -161,6 +133,7 @@ public partial class Player : Character{
 		else if (action_tag == "SaveArena"){
 			SaveArena();
 		}
+		*/
 		GD.Print(action_tag);
         OnPlayAction(action_tag);
 	}
@@ -200,34 +173,13 @@ public partial class Player : Character{
     }
 
     public virtual void OnPlayAction(string tag){
-
+		// Send the action to characters move deck
     }
 
      public virtual void OnPhysicsProcess(double delta){
 
-        // We get one of the collisions with the player.
-       		KinematicCollision3D collision = MoveAndCollide(Velocity * (float)delta, testOnly: true);
-			if (collision != null)
-        	{
-            	GD.Print("I collided with ", ((Node)collision.GetCollider()).Name);
-        
-				for (int i = 0; i < collision.GetCollisionCount(); i++){
-				
-        		if (collision.GetCollider(i).IsClass(this.weapon.GetClass()))
-        			{
-						Weapon enemy_weapon = (Weapon)collision.GetCollider(i);
-            			int damage = enemy_weapon.Damage;
-						this.Damage(damage);
-        			}
-				}
-			}
+        base._PhysicsProcess(delta);
     }
-
-	//public void TeleportTo(Marker3D spot){
-	//	Vector3 coordinates = spot.GlobalPosition;
-//		GD.Print("Teleporting player to " + coordinates.ToString());
-//		this.GlobalPosition = coordinates;
-//	}
 
 	public void StoreState(){
 		//load health, weapon and modifiers to file/singleton to store info between scenes
@@ -288,8 +240,148 @@ public partial class Player : Character{
 		GD.Print($"Player should execute the following action: {executor} - {order}");
 	}
 
-	public override void LoadAliases(Dictionary<string, string> move_deck_aliases){
 
+	public override List<string> LoadMoveKeys(){
+		string path = "user://PlayerGeneric_move_keys.json";
+		if (!Godot.FileAccess.FileExists(path))
+    	{
+			var keys = new List<string>(){
+				"AnimationPlayer/Idle"
+			};
+			// load animations from Animation player
+			this.AddAnimationsToMoveKeys();
+			// load shorthands from movement executor
+			// Currently hardcoded for testing movement executor
+			keys.Add("Movement/DeltaFWD");
+			keys.Add("Movement/DeltaBWD");
+			keys.Add("Movement/DeltaTurnLeft");
+			keys.Add("Movement/DeltaTurnRight");
+			SaveStringListAsJson(keys, path);
+			return keys;
+		}
+		using var file = Godot.FileAccess.Open(path, Godot.FileAccess.ModeFlags.Read);
+		var godot_list = LoadJsonAsList(path);
+		return ConvertToList(godot_list);// Error! We don't have a save to load.
+		//var godot_dict2 = LoadJsonAsDict("user://PlayerGeneric/move_aliases.json");
+		//return ConvertToString(godot_dict2);// Error! We don't have a save to load.
+	}
+
+	// Move to a separate utility class 
+	public Godot.Collections.Dictionary<string, Variant> LoadJsonAsDict(string path){
+		if (!Godot.FileAccess.FileExists(path))
+    	{
+        	return null; // Error! We don't have a save to load.
+    	}
+		using var file = Godot.FileAccess.Open(path, Godot.FileAccess.ModeFlags.Read);
+		string contents = file.GetAsText();
+		Json json = new Json();
+		var json_var = json.Parse(contents);
+		var dict = new Godot.Collections.Dictionary<string, Variant>((Godot.Collections.Dictionary)json.Data);
+		return dict;
+	}
+
+	public Dictionary<string, string> ConvertToString(Godot.Collections.Dictionary<string, Variant> dict){
+		var res = new Dictionary<string, string>();
+		foreach(var item in dict){
+			res[item.Key] = item.Value.ToString();
+		}
+		return res;
+	} 
+
+	public Godot.Collections.Dictionary<string, Variant> ConvertToGodot(Dictionary<string, string> dict){
+		var res = new Godot.Collections.Dictionary<string, Variant>();
+		foreach(var item in dict){
+			res[item.Key] = item.Value;
+		}
+		return res;
+	} 
+
+	public Godot.Collections.Array<Variant> LoadJsonAsList(string path){
+		if (!Godot.FileAccess.FileExists(path))
+    	{
+        	return null; // Error! We don't have a save to load.
+    	}
+		using var file = Godot.FileAccess.Open(path, Godot.FileAccess.ModeFlags.Read);
+		string contents = file.GetAsText();
+		Json json = new Json();
+		var json_var = json.Parse(contents);
+		var list = new Godot.Collections.Array<Variant>((Godot.Collections.Array)json.Data);
+		return list;
+	}
+
+	public List<string> ConvertToList(Godot.Collections.Array<Variant> arr){
+		var res = new List<string>();
+		foreach(var item in arr){
+			res.Add(item.ToString());
+		}
+		return res;
+	} 
+
+	public Godot.Collections.Array<Variant> ConvertToGodotList(List<string> arr){
+		var res = new Godot.Collections.Array<Variant>();
+		foreach(var item in arr){
+			res.Add(item);
+		}
+		return res;
+	} 
+
+	public void SaveAliasDictionaryAsJson(Dictionary<string,string> data, string path){
+		using var file = Godot.FileAccess.Open(path, Godot.FileAccess.ModeFlags.Write);
+		 var jsonString = Json.Stringify(ConvertToGodot(data));
+		file.StoreLine(jsonString);
+	}
+
+	public void SaveStringListAsJson(List<string> keys, string path){
+		using var file = Godot.FileAccess.Open(path, Godot.FileAccess.ModeFlags.Write);
+		var jsonString = Json.Stringify(ConvertToGodotList(keys));
+		file.StoreLine(jsonString);
+	}
+
+	public override Dictionary<string, string> LoadAliases(){
+		// Load file "PlayerInputMap" from player settings
+		// load file as json
+		//JSON load
+		// create dict from json for input map
+		var godot_dict = LoadJsonAsDict("user://input_map.json");
+		if(godot_dict == null){
+			// Can look into GUID to semi auto generate, but we are mostly interested in the key to action not in specific mapping names 
+			// input_map[ACTION NAME IN INPUT MAP] = ALIAS FOR THE MOVE so it is human readable AND for player it is the GENERIC move name (for boss or mob it may be a script action name), NOT CHARACTER SPECIFIC;
+			input_map = new Dictionary<string, string>();
+			input_map["LEFT"] = "RotateLeft";
+			input_map["RIGHT"] = "RotateRight";
+			input_map["FWD"] = "MoveForward";
+			input_map["BWD"] = "MoveBackward";
+			input_map["INTERACT"] = "Interact";
+			input_map["LACTION"] = "QuickAttack";
+			input_map["RACTION"] = "HeavyAttack";
+			input_map["ABILITY"] = "AbilityTrigger";
+			input_map["ULT"] = "UltimateMove";
+			// Maybe separate out player only actions and do not include them in the move deck 
+			//input_map["SAVE_ARENA"] = "SaveArena";
+			// Add separate no input for idle reset
+			input_map["RESET"] = "Idle";
+			SaveAliasDictionaryAsJson(input_map, "user://input_map.json");
+		}
+		else{
+			input_map = ConvertToString(godot_dict);
+		}
+		// then map each move input to a key from the move deck from file, if file not present, just use default ordering from settings
+		if(Godot.FileAccess.FileExists("user://PlayerGeneric_move_aliases.json")){
+			// load in file
+			var godot_dict2 = LoadJsonAsDict("user://PlayerGeneric_move_aliases.json");
+			return ConvertToString(godot_dict2);
+		}else{
+			var move_deck_aliases = new Dictionary<string, string>();
+			for(int i = 0; i<input_map.Keys.Count; i++){
+				var value_input = input_map.ElementAt(i).Value;
+				if(i<GetMoveKeys().Count){
+					var key_moves = GetMoveKeys()[i];
+					move_deck_aliases[value_input] = key_moves;
+				}
+			}
+			SaveAliasDictionaryAsJson(move_deck_aliases, "user://PlayerGeneric_move_aliases.json");
+			return move_deck_aliases;
+		}
 	}
 
     public override Marker3D GetSpawn(){
@@ -330,8 +422,8 @@ public partial class Player : Character{
 		GD.Print("Ran into another character");
 		if(collider is EnvEnemy){
 			GD.Print("ITs ENEMY!!!");
-			enemy = collider as EnvEnemy;
-			this.Damage(enemy.GetCollisionDamage);
+			var enemy = collider as EnvEnemy;
+			this.Damage(enemy.GetCollisionDamage());
 		}
 	}
     // On collisions with weapons
@@ -339,8 +431,6 @@ public partial class Player : Character{
 		GD.Print("Hit a weapon");
 		this.Damage(collider.Damage);
 	}
-
-
 
 	public Control GetHUD(){
 		return GetNode<Control>("HUD");
