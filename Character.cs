@@ -1,24 +1,33 @@
-// TODO character functionality
+// TODO character functionalitye
+// Refactoring note:
+//      Need to determine the character node organization, as it seems the transforms are getting fucked
+//      Due to hidden engine logic
+//      Also, for gameplay, need to figure out camera
+// Refactoring note:
+//      For movement executor, create file for shorthand moves (would allow for customization)
+// Refactoring note:
+//      Could move file logic to a separate space
 // 1) Animation player (With an animation deck)                             // TODO - load in animations from external file
 // 2) Move deck - Dictionary with string tokens and function calls          // Currently move aliases, uses executors
-// 3) Collisions - Deal with collisions of the character                    // Kinda done, relies on abstract methods         - Find a way to disable collisions with children
-// 4) Movement - Deal with character movement and movement calculations     // Testing, needs testing and may need changes    - Need to add shorthand check for the movement executor 
-// 5) Rescale                                                               // TODO - implement    
-// 6) Spawn                                                                 // Kinda done, relies on abstract methods
-// 7) Constrain                                                             // TODO - add
-// 8) Add core marker                                                       // TODO - add
-// 9) Activity tracker                                                      // TODO - add
-
+// 3) Collisions - Deal with collisions of the character                    // Doneish, relies on abstract methods         - Find a way to disable collisions with children
+// 4) Movement - Deal with character movement and movement calculations     // Doneish, Fixed input reliance. Rotation is still offset, seems like origin might need to be moved, but movement works     - Need to add shorthand check for the movement executor 
+// 5) Rescale                                                               // Buggy as hell, needs to be done either via animations or some better way, but should work with teleporting and markers - implement    
+// 6) Spawn                                                                 // Testing, relies on abstract methods
+// 7) Constrain                                                             // Constrain during pause or status effectsTODO - add
+// 8) Add core marker                                                       // Add a marker to character layout the represents their core - add
+// 9) Activity tracker                                                      // Track cooldowns, active moves and animations, might just need to use a status struct - add
+// 10) For collision object, see if it possible to use deeper children instead (due to transforms) or if parent nodes should be made
 
 using Godot;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Metrics;
 using System.Numerics;
 
 public class MovementExecutor{
     
-    public float Speed {set; get;} = 0.0f;
+    public float Speed {set; get;} = 5.0f;
     public float JumpVelocity {set; get;} = 0.0f;
     public float FlySpeed {set; get;} = 0.0f;
     public float JumpImpulse { get; set; } = 20;
@@ -30,8 +39,37 @@ public class MovementExecutor{
     public bool IsOnFloor { get; set; } = true;
     public bool CanFly { get; set; } = false;
 
+    public Dictionary<string,string> shorthands;
+    private Godot.Vector3 move_vector;
+    private int counter;
+    private int cooldown;
+    private bool at_rest;
+
+    
+
     public MovementExecutor(){
         last_delta = 0.0;
+        shorthands = new Dictionary<string,string>();
+        float delta_x = 0.15f;
+        float delta_rot = 0.15f;
+        counter = 0;
+        cooldown = 1;
+        at_rest = false;
+        move_vector = Godot.Vector3.Zero;
+        shorthands.Add("DeltaFWD", $"Move/Z/{Speed*delta_x}");
+        shorthands.Add("DeltaBWD", $"Move/Z/{-Speed*delta_x}");
+        shorthands.Add("DeltaTurnRight", $"Rotate/{-delta_rot}");
+        shorthands.Add("DeltaTurnLeft", $"Rotate/{delta_rot}");
+        shorthands.Add("SmallJump", $"Jump/{JumpImpulse}");
+        shorthands.Add("BigJump", $"Jump/{5*JumpImpulse}");
+        shorthands.Add("Fly", $"Fly/{FlySpeed}");
+        shorthands.Add("Rest", $"Move/X/0/Z/0");
+        //shorthands.Add("Rotate", "");
+        //shorthands.Add("Rotate", "");
+        //shorthands.Add("Rotate", "");
+        //shorthands.Add("Rotate", "");
+        //shorthands.Add("Rotate", "");
+        //shorthands.Add("Rotate", "");
     }
 
     public void Init(Godot.Vector3 v, Transform3D t3, float s = 0.0f, float jv = 0.0f, float fs = 0.0f, float ji = 20.0f, float fa = 75.0f, bool g = true, bool iof = true, bool cf = false){
@@ -48,35 +86,32 @@ public class MovementExecutor{
     }
 
     public void SyncWithCharacter(Godot.Vector3 v, Transform3D t3, bool iof){
-        velocity = v;
+        //velocity = v;
         transform3D = t3;
         IsOnFloor= iof;
     }
 
     public void MoveHorizontal(Godot.Vector3 delta_mov){
+        GD.Print($"Moving horizontal {delta_mov}");
         Transform3D transform = transform3D;
-		var base_pos = transform.Basis;
+        var basis = transform.Basis;
 		var scale_vec = new Godot.Vector3(1, 0, -1);
-		velocity = base_pos * ( scale_vec * delta_mov * Speed);
+        var Y = velocity.Y;
+		velocity = basis * ( scale_vec * delta_mov * Speed); //scale_vec *s
+        velocity.Y = Y;
     }
 
-    public void MoveVertical(double delta){
-        velocity.Y -= FallAcceleration * (float)delta;
+    public void MoveVertical(Godot.Vector3 delta_mov){
+        GD.Print($"Moving vertical {delta_mov}");
+        Transform3D transform = transform3D;
+        var basis = transform.Basis;
+		var scale_vec = new Godot.Vector3(0, 1, 0);
+		var velocity_local = ( scale_vec * delta_mov); //scale_vec *s
+        velocity.Y = velocity_local.Y;
+        GD.Print($"Moving vertical {velocity}");
     }
 
     public void Jump(){
-        //every argument is a key value pair in form of key: value
-		//type is inferred, if needed, it can be added after underscore
-		// make functions to handle parsing, but should be as simple as possible
-		//Jump calculation
-		//double gravity = 0.0; //Used for ballistic calculation
-		//Transform3D transform = transform3D;
-		// integrate the jump
-		//if(!is_moving){
-		//	is_moving = true;
-		//  target_velocity.y += jump_impulse;
-		//}
-		//transform3D = transform;
         if (IsOnFloor){
             velocity.Y = JumpImpulse;
         }
@@ -86,12 +121,11 @@ public class MovementExecutor{
         // TODO change to look at 
 		Transform3D transform = transform3D;
 		Godot.Vector3 axis = new Godot.Vector3(0, 1, 0);
-		transform.Basis = transform.Basis.Rotated(axis, delta);
+		transform = transform.RotatedLocal(axis, delta);
 		transform3D = transform;
 	}
 
-    public void Fly(float delta){
-        // TODO change to look at 
+    public void Fly(float delta){ 
 		Transform3D transform = transform3D;
 		Godot.Vector3 axis = new Godot.Vector3(0, 1, 0);
 		transform = transform.TranslatedLocal(new Godot.Vector3(0,0,delta));
@@ -99,27 +133,59 @@ public class MovementExecutor{
 	}
 
     public void ExecuteOrder(string order){
+        if(!order.Contains("/")){
+            foreach(var shorthand in shorthands.Keys){
+                if (shorthand == order){
+                    ExecuteOrder(shorthands[shorthand]);
+                    return;
+                }
+            }
+        }
+        at_rest = false;
         string[] parts = order.Split(new[] { "/" }, StringSplitOptions.None);
         switch(parts[0]){
+            
             case "Move":
-                Godot.Vector3 move_vector = new Godot.Vector3();
-                bool vertical = false, horizontal = false; 
+                cooldown = 1; //FPS*seconds
+                bool vertical = false, horizontal = false;
+                bool x = false;
+                bool y = false;
+                bool z = false; 
                 for(int i = 1; i< parts.Length-1; i+=2){
+                    GD.Print($"Parts {parts[i]}");
+                    
                     if(parts[i] == "X"){
+                        GD.Print($"Parts {parts[i+1]}");
                         move_vector.X = float.Parse(parts[i+1]);
                         horizontal = true;
+                        x = true;
                     }
                     if(parts[i] == "Y"){
                         move_vector.Y = float.Parse(parts[i+1]);
                         vertical = true;
+                        y = true;
                     }
                     if(parts[i] == "Z"){
                         move_vector.Z = float.Parse(parts[i+1]);
                         horizontal = true;
+                        z = true;
                     }
+                    
                 }
+                if(!x) move_vector.X = 0;
+                if(!y){
+                        if(IsOnFloor){
+                            GD.Print("Is on floor");
+                            move_vector.Y = 0;
+                        }else{
+                            GD.Print($"falling {last_delta} {FallAcceleration}");
+                            move_vector.Y -= FallAcceleration * (float)last_delta;
+                            GD.Print($"falling {move_vector.Y}");
+                        }
+                }
+                if(!z) move_vector.Z = 0;
                 if (vertical || gravity){
-                    MoveVertical(last_delta);
+                    MoveVertical(move_vector);
                 }
                 if (horizontal){
                     MoveHorizontal(move_vector);
@@ -140,7 +206,7 @@ public class MovementExecutor{
                 //        move_vector.Z = float.Parse(parts[i+1]);
                 //        horizontal = true;
                 //    }
-
+                cooldown = 1; //FPS*seconds
                 if (parts.Length > 1){
                     float delta_rot = 0.0f;
                     if (parts.Length == 2){
@@ -154,6 +220,7 @@ public class MovementExecutor{
                 }
             break;
             case "Jump":
+                cooldown = 1; //FPS*seconds
                 if (parts.Length > 1){ //Custom impulse
                     if (parts.Length == 2){
                         JumpImpulse = float.Parse(parts[1]); 
@@ -165,7 +232,8 @@ public class MovementExecutor{
                 }    
                 Jump();
             break;
-            case "Fly": 
+            case "Fly":
+                cooldown = 1; //FPS*seconds
                 if (parts.Length > 1){ //Custom impulse
                     if (parts.Length == 2){
                         FlySpeed = float.Parse(parts[1]); 
@@ -178,14 +246,27 @@ public class MovementExecutor{
                 Fly(FlySpeed);
             break;
             default:
+            
             GD.Print($"Action not supported {parts[0]}");
             break;
         }
     }
 
-    public void OnUpdate(double delta, Godot.Vector3 v, Transform3D t3, bool iof){
+    public void OnUpdate(double delta, Godot.Vector3 v, Transform3D t3, bool iof, bool input_happened){
         last_delta = delta;
+        // Default move set
+        // 1) Create a cooldown that resets velocity on no input
+        if(!input_happened && !at_rest){
+            counter++;
+            if(counter > cooldown){
+                // Do rest
+                ExecuteOrder("Rest");
+                counter = 0;
+                at_rest = true;
+            }
+        }
         SyncWithCharacter(v, t3, iof);
+        //Move gravity
     }
 
     public Godot.Vector3 GetVelocity(){
@@ -241,6 +322,9 @@ public abstract partial class Character : CharacterBody3D
     public Dictionary<int, string> move_deck_ids;
     private double last_delta;
     private bool is_ready = false;
+    private bool no_input = true;
+    private float scale = 1.0f;
+    private bool scale_changed = false;
 
     public override void _Ready()
 	{
@@ -284,7 +368,16 @@ public abstract partial class Character : CharacterBody3D
 		//	Random rand = new Random();
 		//	animationPlayer.Play(move_deck_aliases[move_deck_ids[rand.Next(0, move_deck_ids.Keys.Count)]]);
 		//}
-        movementExecutor.OnUpdate(delta, Velocity, Transform, IsOnFloor());
+        //if(no_input && !idle){
+        //    movementExecutor.Rest();
+        //}
+        Transform = movementExecutor.GetTransform3D();
+        //Transform.ScaledLocal(scale);
+        if(scale_changed) Rescale(scale);
+        Velocity = movementExecutor.GetVelocity();
+        DoMoveAndCollide();
+        movementExecutor.OnUpdate(delta, Velocity, Transform, IsOnFloor(), !no_input);
+        no_input = true;
         //int id = GetCurrentMove();
         //Move(id);
         //DoMoveAndCollide();
@@ -328,6 +421,7 @@ public abstract partial class Character : CharacterBody3D
         // MoveAndCollider -- String: Vectors to String
         // SignalEmitter -- String: signal name in Signal dictionary
         // EffectApplicator -- String: Effect to apply, value in parenthesis
+        no_input = false;
         if(!move_deck_aliases.ContainsKey(move_alias)){
             GD.Print("Key not in dict " + move_alias);
             return;
@@ -348,9 +442,7 @@ public abstract partial class Character : CharacterBody3D
             break;
             case "Movement":
                 movementExecutor.ExecuteOrder(order);
-                Transform = movementExecutor.GetTransform3D();
-                Velocity = movementExecutor.GetVelocity();
-                DoMoveAndCollide();
+                
             break;
             default:
                 Execute(executor, order);
@@ -388,8 +480,19 @@ public abstract partial class Character : CharacterBody3D
         }
     }
 
+    public void SetScale(float factor){
+        scale = factor;
+        scale_changed = true;
+    }
+
     public void Rescale(float factor){
         //TODO implement
+        scale_changed = false;
+		Godot.Vector3 axis = new Godot.Vector3(0, 1, 0);
+		Transform = Transform.Translated(axis*scale*3);
+		
+        var scale_vector = new Godot.Vector3(1,1,1);
+        Transform = Transform.ScaledLocal(scale_vector*scale);
     }
 
     public void DoMoveAndCollide()

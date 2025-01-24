@@ -1,6 +1,3 @@
-.godot/
-Assets/Chakram.blend
-Assets/Chakram.blend.import
-.vscode/settings.json
-Assets/Meshes/MeshLibrary.tres
-Assets/Meshes/Libs/overworld3.tres
+.godot/*
+Assets/*
+.vscode/*

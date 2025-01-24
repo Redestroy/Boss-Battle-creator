@@ -47,6 +47,8 @@ public partial class Player : Character{
 	private RayCast3D raycast;
 	private float rayLength = 10.0f; // Length of the ray
 
+
+
 	public Dictionary<string, string> input_map;
 
 	public override void _Ready()
@@ -72,7 +74,7 @@ public partial class Player : Character{
 		_space_state = GetWorld3D().DirectSpaceState;
 
 
-		if (is_active && !constrained && alive){
+		if (is_active ){  //&& !constrained && alive
 		
 		foreach (var key in input_map.Keys){
 			if (Input.IsActionPressed(key))
@@ -80,6 +82,21 @@ public partial class Player : Character{
 				play_action(input_map[key]);
     		}
 		}
+
+		if (Input.IsActionPressed("Grow"))
+    	{
+			this.SetScale(3.0f);
+    	}
+
+		if (Input.IsActionPressed("Shrink"))
+    	{
+			this.SetScale(0.3f);
+    	}
+
+		if (Input.IsActionPressed("Normalize"))
+    	{
+			this.SetScale(0.3f);
+    	}
 		//raycast. .CastTo = new Vector3(0, -rayLength, 0); // Pointing downwards
         //raycast.Enabled = true;
 
@@ -104,8 +121,6 @@ public partial class Player : Character{
 	}
 
 	public void play_action(string action_tag){ // action tag is actually move already, leaving for testing but may change later
-		float d_rot = 0.15f;
-		float d_mov = 0.15f;
 		Move(action_tag);
 		/*
 		if (action_tag == "LEFT"){
@@ -138,18 +153,18 @@ public partial class Player : Character{
         OnPlayAction(action_tag);
 	}
 
-	public void rotate(float delta){
-		Transform3D transform = Transform;
-		Vector3 axis = new Vector3(0, 1, 0);
-		transform.Basis = transform.Basis.Rotated(axis, delta);
-		Transform = transform;
-	}
+//	public void rotate(float delta){
+//		Transform3D transform = Transform;
+//		Vector3 axis = new Vector3(0, 1, 0);
+//		transform.Basis = transform.Basis.Rotated(axis, delta);
+//		Transform = transform;
+//	}
 
-	public void move(float delta){
-		Transform3D transform = Transform;
-		transform = transform.TranslatedLocal(new Vector3(0,0,delta));
-		Transform = transform;
-	}
+//	public void move(float delta){
+//		Transform3D transform = Transform;
+//		transform = transform.TranslatedLocal(new Vector3(0,0,delta));
+//		Transform = transform;
+//	}
 
 	public string get_player_tag_from_cast(){
 		return "MISS";
