@@ -1,4 +1,4 @@
-// TODO character functionalitye
+// TODO character functionality
 // Refactoring note:
 //      Need to determine the character node organization, as it seems the transforms are getting fucked
 //      Due to hidden engine logic
@@ -335,12 +335,9 @@ public abstract partial class Character : CharacterBody3D
         }
         movementExecutor = new MovementExecutor();
         movementExecutor.Init(Velocity, Transform, Speed, JumpVelocity, FlySpeed, JumpImpulse, FallAcceleration);
-
         // Load animations
         // animation_deck = LoadAnimations("file_name");
-        //move_keys = new List<string>();
         move_keys = LoadMoveKeys();
-        move_deck_aliases = new Dictionary<string, string>();
         move_deck_aliases = LoadAliases();
         move_deck_ids = new Dictionary<int, string>();
         LoadIds(move_deck_aliases);
@@ -387,12 +384,27 @@ public abstract partial class Character : CharacterBody3D
 		//DoAction(action);
 	}
 
-    public static void Spawn(Marker3D spot, string path){
+    public static Character Spawn(Node3D parent, Marker3D spot, string path){
 		// Spawn instance at location
-        // Instantiate
-        var character = ResourceLoader.Load<Character>(path);
-        // Teleport to
-        character.TeleportTo(character.GetSpawn());
+        var character_scene = ResourceLoader.Load<PackedScene>(path);       
+        return Spawn(parent, spot, character_scene);                                      /* And add as child to */
+	}
+
+    public static Character Spawn(Node3D parent, Marker3D spot, PackedScene packedScene){
+		// Spawn instance at location      
+        Character character = packedScene.Instantiate() as Character;   /* Instantiate */
+        character.TeleportTo(spot);  
+        parent.AddChild(character);
+                                       /* and teleport to spawn point */
+        return character;                                         /* And add as child to */
+	}
+
+    public virtual Character Spawn(Node3D parent, Marker3D spot){
+		return Character.Spawn(parent, spot, GetScenePath());
+	}
+
+    public virtual Character Spawn(Node3D parent){
+		return Character.Spawn(parent, GetSpawn(), GetScenePath());
 	}
 
     public void Despawn(){
@@ -400,6 +412,8 @@ public abstract partial class Character : CharacterBody3D
 	}
 
     public void TeleportTo(Marker3D spot){
+        // Issue with teleporting after being added as child of the arena
+        // Look into it
         if(spot == null) return; //Fail silently. Later may add a cancelled teleport effect.
         Godot.Vector3 coordinates = spot.GlobalPosition;
         string character_name = GetName();
@@ -551,6 +565,8 @@ public abstract partial class Character : CharacterBody3D
 		}
     }
 
+
+
     public abstract int GetCurrentMove();
     public abstract Marker3D FindMarker(string node_name);
     public abstract void Execute(string executor, string order);
@@ -558,7 +574,7 @@ public abstract partial class Character : CharacterBody3D
     public abstract Dictionary<string, string> LoadAliases();
     public abstract Marker3D GetSpawn();
     public abstract string GetScenePath();
-    public abstract void Spawn(Marker3D spot);
+    
 
     //Collision handling
     // On area interactions

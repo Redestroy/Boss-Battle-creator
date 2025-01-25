@@ -8,7 +8,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-public partial class Mob : Character, IEnvEnemy{
+public partial class Mob : Character, IEnvEnemy, IDamageable{
 
     [Signal]
     public delegate void PlayerKilledEventHandler();
@@ -16,17 +16,31 @@ public partial class Mob : Character, IEnvEnemy{
     [Signal]
     public delegate void EnemyDiedEventHandler();
 
-
+    private Heart heart;
     [Export]
     public int CollisionDamage{get; set;}
+
     [Export]
-    public int Health{get; set;}
+    public int MaxHealth{get; set;} = 10;
+
+    [Export]
+    public int Health{
+        get{
+            return heart.Health;
+        }
+        set{
+            heart.Health = value;
+        }}
     [Export]
     public string Warcry{get; set;}
     public Character Target{get; set;}
+    
 
     public override void _Ready()
 	{
+        heart = new Heart(this, MaxHealth);
+		heart.Damaged += OnDamage;
+		heart.Died += OnDeath;
 	}
 
     public override int GetCurrentMove(){
@@ -56,10 +70,6 @@ public partial class Mob : Character, IEnvEnemy{
     }
     public override string GetScenePath(){
         return this.scene_path;
-    }
-
-    public override void Spawn(Marker3D spot){
-        Spawn(spot, GetScenePath());
     }
 
     //Collision handling
@@ -117,6 +127,11 @@ public partial class Mob : Character, IEnvEnemy{
         else{
             return null;
         }
+    }
+
+    public void OnDamage(int Damage){
+        //Play OnDamage
+        OnDamage();
     }
 
     public void OnDamage(){

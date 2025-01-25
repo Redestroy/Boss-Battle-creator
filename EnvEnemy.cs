@@ -68,3 +68,4 @@ public partial class EnvEnemy : CharacterBody3D, IEnvEnemy{
         GD.Print("Got Damaged");
     }
 }
+

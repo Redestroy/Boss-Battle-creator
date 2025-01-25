@@ -5,6 +5,9 @@ using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
 
+// Refactor note:
+// Move static methods to a file helper later
+
 // TODO player functionality
 // 1) Input mapping
 // 2) HUD
@@ -15,7 +18,7 @@ using System.Linq;
 
 // NOTE minor limit - cannot create files in non existing directories.
 
-public partial class Player : Character{
+public partial class Player : Character, IDamageable{
 
 	[Signal]
     public delegate void PlayerKilledEventHandler();
@@ -27,9 +30,10 @@ public partial class Player : Character{
 	public bool is_active = false;
 
 	[Export]
-    private int health {get;set;} = 100; 
+    private int initial_health {get;set;} = 100; 
 
-    private bool alive = true;
+	[Export]
+    private int initial_damage {get;set;} = 20; 
 
 	public static bool player_selected = false;
 
@@ -47,7 +51,10 @@ public partial class Player : Character{
 	private RayCast3D raycast;
 	private float rayLength = 10.0f; // Length of the ray
 
+	private int max_health;
 
+	private Heart heart;
+	private Arena arena; //// Note: for spawning use a separate interface as overworld should work a tad differently (as well as multiplayer) 
 
 	public Dictionary<string, string> input_map;
 
@@ -62,8 +69,22 @@ public partial class Player : Character{
 			active_player = this;
 		}
 		constrained = false;
-		camera = GetNode<Camera3D>("Marker3D/Camera3D");
+		heart = new Heart(this, initial_health);
+		heart.Damaged += OnDamage;
+		heart.Died += OnDeath;
+		OnDamage(initial_damage);
+
+		var hud = GetHUD();
+		var label_player_health = hud.GetNode<Label>("Health");
+		label_player_health.Text = $"{heart.Health}";
+		var HUD = GetHUD();
+		var bar_player_health = HUD.GetNode<TextureProgressBar>("HealthBar");
+		bar_player_health.SetValueNoSignal(100*heart.Health/heart.MaxHealth);
+
+ 		camera = GetNode<Camera3D>("Marker3D/Camera3D");
 		weapon = GetNode<Weapon>("Pivot/WeaponPivot/Weapon");
+		arena = GetParent<Arena>();
+		
 		//raycast = GetNode<RayCast3D>("RayCast3D");
 	}
 
@@ -73,8 +94,7 @@ public partial class Player : Character{
 		Vector3 velocity = Velocity;
 		_space_state = GetWorld3D().DirectSpaceState;
 
-
-		if (is_active ){  //&& !constrained && alive
+		if (is_active && !constrained && heart.Alive ){  //
 		
 		foreach (var key in input_map.Keys){
 			if (Input.IsActionPressed(key))
@@ -85,17 +105,21 @@ public partial class Player : Character{
 
 		if (Input.IsActionPressed("Grow"))
     	{
-			this.SetScale(3.0f);
+			//this.SetScale(3.0f);
+			OnDamage(-1);
     	}
 
 		if (Input.IsActionPressed("Shrink"))
     	{
-			this.SetScale(0.3f);
+			//this.SetScale(0.3f);
+			OnDamage(1);
     	}
 
 		if (Input.IsActionPressed("Normalize"))
     	{
-			this.SetScale(0.3f);
+			//this.SetScale(1f);
+			heart.Health = 100;
+			OnDamage(0);
     	}
 		//raycast. .CastTo = new Vector3(0, -rayLength, 0); // Pointing downwards
         //raycast.Enabled = true;
@@ -216,20 +240,23 @@ public partial class Player : Character{
 	public void Release(){
 		constrained = false;
 	}
-
 	
     public int GetHealth(){
-        return health;
+        return heart.Health;
     }
 
-	public void Damage(int dmg){
+	public void OnDamage(int dmg){
 		GD.Print("Ouch! That hurt");
-        health -= dmg;
-        if(health < 0){
-            health = 0;
-            OnDeath();
-        }
+        UpdateLifeBar();
     }
+
+	public void UpdateLifeBar(){ //NIT Maybe change getting a reference each time (or not)
+		var HUD = GetHUD();
+		var bar_player_health = HUD.GetNode<TextureProgressBar>("HealthBar");
+		var label_player_health = HUD.GetNode<Label>("Health");
+		label_player_health.Text = $"{heart.Health}";
+		bar_player_health.SetValueNoSignal(100*heart.Health/heart.MaxHealth);
+	}
 
 	public void OnFled(){
 		GD.Print("Player ran like a chicken");
@@ -237,11 +264,8 @@ public partial class Player : Character{
 	}
 
     public void OnDeath(){
-        // Send Death signal
+		// Play Death animation
 		EmitSignal(SignalName.PlayerKilled);
-        // Play Death animation
-        // Enter state dead, for whatever that entails
-        alive = false;
     }
 
 	public override int GetCurrentMove(){
@@ -249,12 +273,12 @@ public partial class Player : Character{
 	}
     public override Marker3D FindMarker(string node_name){
 		//Find child in arena object
-		return new Marker3D();
+		string marker_path_prefix = "";
+		return arena.GetNode<Marker3D>($"{marker_path_prefix}/{node_name}");
 	}
     public override void Execute(string executor, string order){
 		GD.Print($"Player should execute the following action: {executor} - {order}");
 	}
-
 
 	public override List<string> LoadMoveKeys(){
 		string path = "user://PlayerGeneric_move_keys.json";
@@ -271,85 +295,14 @@ public partial class Player : Character{
 			keys.Add("Movement/DeltaBWD");
 			keys.Add("Movement/DeltaTurnLeft");
 			keys.Add("Movement/DeltaTurnRight");
-			SaveStringListAsJson(keys, path);
+			FileHelper.SaveStringListAsJson(keys, path);
 			return keys;
 		}
 		using var file = Godot.FileAccess.Open(path, Godot.FileAccess.ModeFlags.Read);
-		var godot_list = LoadJsonAsList(path);
-		return ConvertToList(godot_list);// Error! We don't have a save to load.
+		var godot_list = FileHelper.LoadJsonAsList(path);
+		return FileHelper.ConvertToList(godot_list);// Error! We don't have a save to load.
 		//var godot_dict2 = LoadJsonAsDict("user://PlayerGeneric/move_aliases.json");
 		//return ConvertToString(godot_dict2);// Error! We don't have a save to load.
-	}
-
-	// Move to a separate utility class 
-	public Godot.Collections.Dictionary<string, Variant> LoadJsonAsDict(string path){
-		if (!Godot.FileAccess.FileExists(path))
-    	{
-        	return null; // Error! We don't have a save to load.
-    	}
-		using var file = Godot.FileAccess.Open(path, Godot.FileAccess.ModeFlags.Read);
-		string contents = file.GetAsText();
-		Json json = new Json();
-		var json_var = json.Parse(contents);
-		var dict = new Godot.Collections.Dictionary<string, Variant>((Godot.Collections.Dictionary)json.Data);
-		return dict;
-	}
-
-	public Dictionary<string, string> ConvertToString(Godot.Collections.Dictionary<string, Variant> dict){
-		var res = new Dictionary<string, string>();
-		foreach(var item in dict){
-			res[item.Key] = item.Value.ToString();
-		}
-		return res;
-	} 
-
-	public Godot.Collections.Dictionary<string, Variant> ConvertToGodot(Dictionary<string, string> dict){
-		var res = new Godot.Collections.Dictionary<string, Variant>();
-		foreach(var item in dict){
-			res[item.Key] = item.Value;
-		}
-		return res;
-	} 
-
-	public Godot.Collections.Array<Variant> LoadJsonAsList(string path){
-		if (!Godot.FileAccess.FileExists(path))
-    	{
-        	return null; // Error! We don't have a save to load.
-    	}
-		using var file = Godot.FileAccess.Open(path, Godot.FileAccess.ModeFlags.Read);
-		string contents = file.GetAsText();
-		Json json = new Json();
-		var json_var = json.Parse(contents);
-		var list = new Godot.Collections.Array<Variant>((Godot.Collections.Array)json.Data);
-		return list;
-	}
-
-	public List<string> ConvertToList(Godot.Collections.Array<Variant> arr){
-		var res = new List<string>();
-		foreach(var item in arr){
-			res.Add(item.ToString());
-		}
-		return res;
-	} 
-
-	public Godot.Collections.Array<Variant> ConvertToGodotList(List<string> arr){
-		var res = new Godot.Collections.Array<Variant>();
-		foreach(var item in arr){
-			res.Add(item);
-		}
-		return res;
-	} 
-
-	public void SaveAliasDictionaryAsJson(Dictionary<string,string> data, string path){
-		using var file = Godot.FileAccess.Open(path, Godot.FileAccess.ModeFlags.Write);
-		 var jsonString = Json.Stringify(ConvertToGodot(data));
-		file.StoreLine(jsonString);
-	}
-
-	public void SaveStringListAsJson(List<string> keys, string path){
-		using var file = Godot.FileAccess.Open(path, Godot.FileAccess.ModeFlags.Write);
-		var jsonString = Json.Stringify(ConvertToGodotList(keys));
-		file.StoreLine(jsonString);
 	}
 
 	public override Dictionary<string, string> LoadAliases(){
@@ -357,7 +310,7 @@ public partial class Player : Character{
 		// load file as json
 		//JSON load
 		// create dict from json for input map
-		var godot_dict = LoadJsonAsDict("user://input_map.json");
+		var godot_dict = FileHelper.LoadJsonAsDict("user://input_map.json");
 		if(godot_dict == null){
 			// Can look into GUID to semi auto generate, but we are mostly interested in the key to action not in specific mapping names 
 			// input_map[ACTION NAME IN INPUT MAP] = ALIAS FOR THE MOVE so it is human readable AND for player it is the GENERIC move name (for boss or mob it may be a script action name), NOT CHARACTER SPECIFIC;
@@ -375,16 +328,16 @@ public partial class Player : Character{
 			//input_map["SAVE_ARENA"] = "SaveArena";
 			// Add separate no input for idle reset
 			input_map["RESET"] = "Idle";
-			SaveAliasDictionaryAsJson(input_map, "user://input_map.json");
+			FileHelper.SaveAliasDictionaryAsJson(input_map, "user://input_map.json");
 		}
 		else{
-			input_map = ConvertToString(godot_dict);
+			input_map = FileHelper.ConvertToString(godot_dict);
 		}
 		// then map each move input to a key from the move deck from file, if file not present, just use default ordering from settings
 		if(Godot.FileAccess.FileExists("user://PlayerGeneric_move_aliases.json")){
 			// load in file
-			var godot_dict2 = LoadJsonAsDict("user://PlayerGeneric_move_aliases.json");
-			return ConvertToString(godot_dict2);
+			var godot_dict2 = FileHelper.LoadJsonAsDict("user://PlayerGeneric_move_aliases.json");
+			return FileHelper.ConvertToString(godot_dict2);
 		}else{
 			var move_deck_aliases = new Dictionary<string, string>();
 			for(int i = 0; i<input_map.Keys.Count; i++){
@@ -394,20 +347,18 @@ public partial class Player : Character{
 					move_deck_aliases[value_input] = key_moves;
 				}
 			}
-			SaveAliasDictionaryAsJson(move_deck_aliases, "user://PlayerGeneric_move_aliases.json");
+			FileHelper.SaveAliasDictionaryAsJson(move_deck_aliases, "user://PlayerGeneric_move_aliases.json");
 			return move_deck_aliases;
 		}
 	}
 
     public override Marker3D GetSpawn(){
-		return FindMarker("SpawnPlayer");
+		return arena.GetNode<Marker3D>("SpawnPlayer");
+		//return FindMarker("SpawnPlayer");
 	}
 
     public override string GetScenePath(){
 		return this.scene_path;
-	}
-    public override void Spawn(Marker3D spot){
-		Character.Spawn(spot, GetScenePath());
 	}
 
     //Collision handling
@@ -438,13 +389,13 @@ public partial class Player : Character{
 		if(collider is EnvEnemy){
 			GD.Print("ITs ENEMY!!!");
 			var enemy = collider as EnvEnemy;
-			this.Damage(enemy.GetCollisionDamage());
+			this.OnDamage(enemy.GetCollisionDamage());
 		}
 	}
     // On collisions with weapons
     public override void OnCollidedWithWeapon(Weapon collider){
 		GD.Print("Hit a weapon");
-		this.Damage(collider.Damage);
+		this.OnDamage(collider.Damage);
 	}
 
 	public Control GetHUD(){

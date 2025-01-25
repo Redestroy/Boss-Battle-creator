@@ -10,34 +10,11 @@ using System.Linq;
 // 3) Organize move decks
 // 4) Add the randomization stuff
 
-public class Action{
-	int Id;
-	int arg_count;
-	List<string> arguments;
-	Func<List<string>, int> act;
-
-	public int do_action(){
-		return act(arguments);
-	} 
-}
-
-public class Observation{
-	Dictionary<string, Tuple<string,string>> data;
-}
-
-//Todo change to interface
-public abstract class AgentScript{
-	public abstract Action get_action(Observation observation);
-	public abstract Observation get_observation(World3D world);
-	public abstract void DoAction(Action action);
-
-	public abstract void OnUpdate(double delta);
-}
-
 public partial class SlimeScript: AgentScript{
 
 	private Dictionary<string, Move> slime_moves;
 	private Dictionary<string, Animation> slime_animations;
+	
 	int last_result;
 	bool is_move_in_progress;
 	Move current_move;
@@ -84,6 +61,10 @@ public partial class SlimeScript: AgentScript{
 		action.do_action();
 	}
 
+	public override void Execute(string order){
+		GD.Print($"Slime boss is doing {order}");
+	}
+
 	public override void OnUpdate(double delta){
 		is_move_in_progress = last_result != -1;
 		if(!is_move_in_progress){
@@ -123,8 +104,6 @@ public partial class SlimeBoss : Boss
 		//move_deck = _load_move_deck_from_file("SlimeDeck.move") as Deck<Move>;
 		//animation_deck = _load_animation_deck_from_file("SlimeDeck.anim") as Deck<Move>;
 		//script = new SlimeScript(move_deck, animation_deck);
-
-		
 	}
 
     public override void _Process(double delta)
