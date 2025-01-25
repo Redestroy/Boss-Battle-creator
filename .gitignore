@@ -1,3 +1,5 @@
 .godot/*
 Assets/*
 .vscode/*
+project.godot
+.vscode/settings.json
