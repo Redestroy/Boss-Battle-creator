@@ -58,4 +58,3 @@ transform = Transform3D(-0.4, 0, 6.03983e-08, 0, 0.4, 0, -6.03983e-08, 0, -0.4, 
 [node name="Player" parent="Skymove" instance=ExtResource("2_spksp")]
 transform = Transform3D(-0.4, 0, 6.03983e-08, 0, 0.4, 0, -6.03983e-08, 0, -0.4, 1.48563, 1.86539, -11.3606)
 Speed = 15.0
-Speed = 15.0

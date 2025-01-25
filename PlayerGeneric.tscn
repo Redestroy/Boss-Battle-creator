@@ -1,8 +1,10 @@
-[gd_scene load_steps=11 format=3 uid="uid://7lgd033g0ab"]
+[gd_scene load_steps=13 format=3 uid="uid://7lgd033g0ab"]
 
 [ext_resource type="Script" path="res://PlayerGeneric.cs" id="1_8qe6d"]
-[ext_resource type="Texture2D" uid="uid://d1q5lhwlubpso" path="res://Assets/Menus/TextImg/Play.png" id="2_17v8f"]
 [ext_resource type="PackedScene" uid="uid://dpf1uemx8po85" path="res://WeaponChakram.tscn" id="2_xxkxc"]
+[ext_resource type="Texture2D" uid="uid://b6euvhxg6cxme" path="res://Assets/Paint/Under.png" id="3_5efqv"]
+[ext_resource type="Texture2D" uid="uid://bvk0j5rehtlg2" path="res://Assets/Paint/Over.png" id="4_gjv61"]
+[ext_resource type="Texture2D" uid="uid://dherfxuqn3hp2" path="res://Assets/Paint/LifeBarProgress.png" id="5_om7ml"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_p8sg2"]
 
@@ -55,27 +57,18 @@ offset_bottom = 627.0
 text = "2000
 "
 
-[node name="BossHealthBar" type="TextureProgressBar" parent="HUD"]
-layout_mode = 0
-offset_left = 75.0
-offset_top = 601.0
-offset_right = 79.0
-offset_bottom = 628.0
-scale = Vector2(12.28, 1)
-texture_under = ExtResource("2_17v8f")
-texture_over = ExtResource("2_17v8f")
-texture_progress = ExtResource("2_17v8f")
-
 [node name="HealthBar" type="TextureProgressBar" parent="HUD"]
 layout_mode = 0
 offset_left = -2.0
 offset_top = 22.0
-offset_right = 82.0
-offset_bottom = 49.0
+offset_right = 142.0
+offset_bottom = 50.0
 scale = Vector2(1.49702, 1.32617)
-texture_under = ExtResource("2_17v8f")
-texture_over = ExtResource("2_17v8f")
-texture_progress = ExtResource("2_17v8f")
+value = 50.0
+nine_patch_stretch = true
+texture_under = ExtResource("3_5efqv")
+texture_over = ExtResource("4_gjv61")
+texture_progress = ExtResource("5_om7ml")
 
 [node name="Help" type="Label" parent="HUD"]
 layout_mode = 0
@@ -105,6 +98,19 @@ offset_top = 172.0
 offset_right = 1001.0
 offset_bottom = 195.0
 text = "Here display debug info if debug enabled"
+
+[node name="BossHealthBar" type="TextureProgressBar" parent="HUD"]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 589.0
+offset_right = 1126.0
+offset_bottom = 642.0
+value = 40.0
+nine_patch_stretch = true
+stretch_margin_left = 90
+texture_under = ExtResource("3_5efqv")
+texture_over = ExtResource("4_gjv61")
+texture_progress = ExtResource("5_om7ml")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("SphereShape3D_p8sg2")
@@ -137,7 +143,7 @@ Damage = 0
 transform = Transform3D(0.996565, -0.0486781, 0.0669898, 4.93162e-10, 0.808976, 0.587842, -0.0828081, -0.585823, 0.806198, 0, 0, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Marker3D"]
-transform = Transform3D(1, -2.6077e-08, 5.21541e-08, 2.98023e-08, 1, 2.98023e-08, -2.23517e-08, 1.19209e-07, 1, -0.203302, 0.179699, 4.84502)
+transform = Transform3D(0.999495, -0.0288333, -0.0134252, 0.021675, 0.926394, -0.37593, 0.0232764, 0.375449, 0.92655, -0.150643, -0.644367, 3.46284)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Marker3D/Camera3D"]
 transform = Transform3D(0.1, -3.72529e-10, -2.23517e-09, 3.72529e-10, 0.1, 0, 2.23517e-09, -8.32668e-18, 0.1, 0, 0, 0)

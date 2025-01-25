@@ -31,7 +31,6 @@ metadata/_editor_floor_ = Vector3(-9, 0, 0)
 transform = Transform3D(-0.00181162, 0, 0.599997, 0, 0.6, 0, -0.599997, 0, -0.00181162, 15.3701, 1.77785, -3.66325)
 wall_min_slide_angle = 0.322886
 Speed = 10.0
-Speed = 10.0
 
 [node name="Arena_Mountain" parent="." instance=ExtResource("4_rmknq")]
 transform = Transform3D(0.000192002, 0, -1, 0, 1, 0, 1, 0, 0.000192002, -31.3759, 2.87212, 0)

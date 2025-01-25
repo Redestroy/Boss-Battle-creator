@@ -12,6 +12,7 @@ grow_vertical = 2
 script = ExtResource("1_0uhbs")
 
 [node name="OnlinePVP" type="Button" parent="."]
+layout_mode = 0
 offset_left = 514.0
 offset_top = 209.0
 offset_right = 657.0
@@ -20,6 +21,7 @@ text = "Online: Labyrinth
 "
 
 [node name="OnlinePVE" type="Button" parent="."]
+layout_mode = 0
 offset_left = 513.0
 offset_top = 244.0
 offset_right = 656.0
@@ -27,6 +29,7 @@ offset_bottom = 275.0
 text = "Online: Arena"
 
 [node name="OfflinePVE" type="Button" parent="."]
+layout_mode = 0
 offset_left = 514.0
 offset_top = 280.0
 offset_right = 658.0

@@ -1,9 +1,12 @@
-[gd_scene load_steps=12 format=3 uid="uid://dposr5j2yb5e5"]
+[gd_scene load_steps=15 format=3 uid="uid://dposr5j2yb5e5"]
 
 [ext_resource type="Script" path="res://GJscripts/Shade.cs" id="1_u1h7w"]
 [ext_resource type="PackedScene" uid="uid://faxtb2fxeop8" path="res://Assets/Shade.blend" id="3_af67l"]
+[ext_resource type="Texture2D" uid="uid://4c8p6hmo7hdd" path="res://Assets/Paint/LifeBarEmpty.png" id="3_rfhlj"]
 [ext_resource type="PackedScene" uid="uid://dpf1uemx8po85" path="res://WeaponChakram.tscn" id="4_1agw2"]
+[ext_resource type="Texture2D" uid="uid://c2mmstsuug84d" path="res://Assets/Paint/LifeBarFull.png" id="4_3jrjt"]
 [ext_resource type="Texture2D" uid="uid://d1q5lhwlubpso" path="res://Assets/Menus/TextImg/Play.png" id="4_um42u"]
+[ext_resource type="Texture2D" uid="uid://dherfxuqn3hp2" path="res://Assets/Paint/LifeBarProgress.png" id="5_0lyw3"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ld6ox"]
 radius = 0.35
@@ -146,9 +149,9 @@ offset_top = 22.0
 offset_right = 82.0
 offset_bottom = 49.0
 scale = Vector2(1.49702, 1.32617)
-texture_under = ExtResource("4_um42u")
-texture_over = ExtResource("4_um42u")
-texture_progress = ExtResource("4_um42u")
+texture_under = ExtResource("3_rfhlj")
+texture_over = ExtResource("4_3jrjt")
+texture_progress = ExtResource("5_0lyw3")
 
 [node name="Help" type="Label" parent="HUD"]
 layout_mode = 0
