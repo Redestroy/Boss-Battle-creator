@@ -57,8 +57,9 @@ public partial class Dojo : Arena
 		//Character.Spawn(this, spawn_point_player, player_scene_path); // Maybe add an override for a packaged scene?
 		player = Character.Spawn(this, spawn_point_player, player_scene) as Player;
 		GD.Print(player);
-		player._set_active();
 		player.TeleportTo(spawn_point_boss);
+		player._set_active();
+		
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.

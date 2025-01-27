@@ -399,6 +399,7 @@ public partial class Player : Character, IDamageable{
 	}
 
 	public Control GetHUD(){
+		//Problem when using spawning for players
 		return GetNode<Control>("HUD");
 	}
 }

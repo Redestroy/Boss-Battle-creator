@@ -393,8 +393,8 @@ public abstract partial class Character : CharacterBody3D
     public static Character Spawn(Node3D parent, Marker3D spot, PackedScene packedScene){
 		// Spawn instance at location      
         Character character = packedScene.Instantiate() as Character;   /* Instantiate */
-        character.TeleportTo(spot);  
         parent.AddChild(character);
+        character.TeleportTo(spot);  
                                        /* and teleport to spawn point */
         return character;                                         /* And add as child to */
 	}

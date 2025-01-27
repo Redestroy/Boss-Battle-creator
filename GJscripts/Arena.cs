@@ -58,7 +58,7 @@ public partial class Arena : Node3D
 
 		active = true;
 
-		OnPlayerEntered(player);
+		//OnPlayerEntered(player);
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
