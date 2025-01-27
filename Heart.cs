@@ -23,6 +23,12 @@ public partial class Heart : Area3D{
 
     [Export]
     public bool Alive{get; private set;} = true; // Could change to ENUM
+
+    public float RelativeHealth{
+        get{
+            return (float)Health/(float)MaxHealth;
+        }
+    }
     public IDamageable creature;
 
     public Heart(IDamageable creature, int health){ // Or could just pass it into constructor
