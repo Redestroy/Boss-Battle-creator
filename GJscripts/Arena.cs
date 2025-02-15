@@ -1,5 +1,36 @@
 using Godot;
 using System;
+using System.Collections.Generic;
+
+// Arena should extend IEnvironment that Overworld also extends (Overworld would not feature combat)
+// 	Arena is the environment of a fight
+// 	There are (currently) two types of arenas: Dojos and Lairs
+// 	A Lair has a boss associated with it, as well as soundtracks and cutscenes
+// 	Dojos on the other hand are simpler and let's two characters fight
+//  Therefore arena handles arena side logic of:
+//		Building arena from file
+//		Saving and loading
+//		Timing and arena manipulation
+//		Spawning entities
+//		Physics
+//		Event passing between fighters (HUD updates)
+//		Skybox
+//	Dojo extends arena and adds the following functionality
+//		Entry
+//		Exit
+//		Victory condition
+//	Lair adds an additional boss related functionality
+//  	Cutscene player and cutscenes
+//		Event deck
+//		Marker deck
+
+
+
+
+public interface IArenaObject{
+	public string ArenaAlias { get; set; }
+	public Marker3D GetSelfPositionTargetMarket();
+}
 
 public partial class Arena : Node3D
 {
@@ -23,6 +54,9 @@ public partial class Arena : Node3D
 	private int boss_health;
 	private double boss_health_max;
 
+	private Godot.Collections.Dictionary<string, Marker3D> target_markers;
+	private Godot.Collections.Dictionary<string, Variant> event_deck;
+
 
 	// Called when the node enters the scene tree for the first time.
 	public override async void _Ready()
@@ -34,6 +68,7 @@ public partial class Arena : Node3D
 			//if(window.)
 			//await RenderingServer.Singleton.ToSignal(GetParent(), SignalName.Ready);
 		}
+		target_markers = new Godot.Collections.Dictionary<string, Marker3D>();
 		//player = GetNode<Player>("Shade");
 		//player._set_active();
 		//boss = GetNode<Boss>("ShadeBoss");
@@ -99,6 +134,21 @@ public partial class Arena : Node3D
 		//label_help.Text = "You died!";
         //door.OnDoorTriggered();
     }
+
+	public void ExtractInfo(IArenaObject a_obj){
+		this.target_markers[a_obj.ArenaAlias] = a_obj.GetSelfPositionTargetMarket();
+	}
+
+	public Marker3D GetTargetMarker(string key){
+		if(!target_markers.ContainsKey(key)){
+			GD.Print("Marker does not exist in the list");
+			foreach(var lkey in target_markers){
+				GD.Print($"{lkey.Key} in {target_markers[lkey.Key]}");
+			}
+			return new Marker3D();
+		}
+		return this.target_markers[key];
+	}
 
 	public void UpdateHUD(){
 		label_boss_health.Text = $"{boss_health}";

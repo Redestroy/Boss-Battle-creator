@@ -8,7 +8,7 @@ public interface IDamageable{
 
 public partial class Heart : Area3D{
     
-    //TODO add emit death signal
+    //TODO think about where damage is initially called
     [Signal]
     public delegate void DamagedEventHandler(int damage);
 
@@ -33,6 +33,9 @@ public partial class Heart : Area3D{
 
     public Heart(IDamageable creature, int health){ // Or could just pass it into constructor
         Health = health;
+        if(MaxHealth<Health){
+            MaxHealth = Health;
+        }
         this.creature = creature; //GetParent<IDamageable>(); // Replace with find or similar
         Alive = true;
     }
@@ -54,6 +57,7 @@ public partial class Heart : Area3D{
                 OnDeath();
             }
         }else{
+            //Never reached currently, to access, need to change creature logic
             GD.Print("Beating a dead horse, huh?");
             //May add necromancy here
         }

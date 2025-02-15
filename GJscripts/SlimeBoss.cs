@@ -10,7 +10,9 @@ using System.Linq;
 // 3) Organize move decks
 // 4) Add the randomization stuff
 
-public partial class SlimeScript: AgentScript{
+public partial class SlimeScript: BossScript{
+
+	TargetObserver observer;
 
 	private Dictionary<string, Move> slime_moves;
 	private Dictionary<string, Animation> slime_animations;
@@ -18,14 +20,15 @@ public partial class SlimeScript: AgentScript{
 	int last_result;
 	bool is_move_in_progress;
 	Move current_move;
-	public SlimeScript(Dictionary<string, Move> moves, Dictionary<string, Animation> animations){
-		slime_moves = moves;
-		slime_animations = animations;
+	public SlimeScript(Boss boss) : base(boss){
+		//base(moves, animations);
+		//slime_moves = moves;
+		//slime_animations = animations;
 		last_result = -1;
 		is_move_in_progress = false;
-		if(moves.TryGetValue("Idle", out Move move)){
-			current_move = move;
-		}
+		//if(moves.TryGetValue("Idle", out Move move)){
+		///	current_move = move;
+		//}
 	}
 
 	public override Action get_action(Observation observation){
@@ -54,7 +57,7 @@ public partial class SlimeScript: AgentScript{
 		// <"position": <"Vector3D", "{x,y,z}">>
 		// <"is_wall": <"bool", "true">>
 		// <"wall_distance": <"double", "dist">>
-		return new Observation();
+		return observer.GetObservation();
 	}
 	public override void DoAction(Action action){
 		
@@ -75,7 +78,7 @@ public partial class SlimeScript: AgentScript{
 	}
 }
 
-public partial class SlimeBoss : Boss
+public partial class SlimeBoss : Boss, IEnvEnemy
 {
 
 	private AgentScript script;
@@ -84,10 +87,10 @@ public partial class SlimeBoss : Boss
 	{
 		GD.Print("Spawned slime boss");
 		//variables = _load_variables_from_file() as Dictionary;
-		Health = 200;
-		CollisionDamage = 15;
-		//attack_damage = 30; handled by weapon node
-		// Need to make some moves
+		base._Ready();
+		GetHeart().Health = 200;
+		GetVitriol().CollisionDamage = 15;
+		this.AttachScript(script);
 		//Move pounce = new Move();
 		//Move directed_jump = new Move();
 		//Move idle = new Move();
@@ -96,11 +99,6 @@ public partial class SlimeBoss : Boss
 		//move_deck["Pounce"] = pounce;
 		//move_deck["jump"] = directed_jump;
 		//move_deck["Idle"] = idle;
-		//animation_deck = new Dictionary<string, Animation>();
-		//animationPlayer = GetNode<AnimationPlayer>("AnimationPlayer");
-		//animation_deck["Shrug"] = animationPlayer.GetAnimation("Shrug");
-		//animation_deck["Recoil"] = animationPlayer.GetAnimation("Recoil");
-		//animation_deck["Jiggle"] = animationPlayer.GetAnimation("Jiggle");
 		//move_deck = _load_move_deck_from_file("SlimeDeck.move") as Deck<Move>;
 		//animation_deck = _load_animation_deck_from_file("SlimeDeck.anim") as Deck<Move>;
 		//script = new SlimeScript(move_deck, animation_deck);

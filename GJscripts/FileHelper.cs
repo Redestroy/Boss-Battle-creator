@@ -27,6 +27,12 @@ public static class FileHelper{
 		file.StoreLine(jsonString);
 	}
 
+	public static void SaveIdsAsJson(Dictionary<int, string> ids, string path){
+		using var file = Godot.FileAccess.Open(path, Godot.FileAccess.ModeFlags.Write);
+		var jsonString = Json.Stringify(ConvertToGodotIds(ids));
+		file.StoreLine(jsonString);
+	}
+
     public static List<string> ConvertToList(Godot.Collections.Array<Variant> arr){
 		var res = new List<string>();
 		foreach(var item in arr){
@@ -56,10 +62,26 @@ public static class FileHelper{
 		return res;
 	}
 
+	public static Godot.Collections.Dictionary<string, Variant> ConvertToGodotIds(Dictionary<int, string> dict){
+		var res = new Godot.Collections.Dictionary<string, Variant>();
+		foreach(var item in dict){
+			res[$"{item.Key}"] = item.Value;
+		}
+		return res;
+	}
+
     public static Dictionary<string, string> ConvertToString(Godot.Collections.Dictionary<string, Variant> dict){
 		var res = new Dictionary<string, string>();
 		foreach(var item in dict){
 			res[item.Key] = item.Value.ToString();
+		}
+		return res;
+	}
+
+	public static Dictionary<int, string> ConvertToIdMap(Godot.Collections.Dictionary<string, Variant> dict){
+		var res = new Dictionary<int, string>();
+		foreach(var item in dict){
+			res[int.Parse(item.Key)] = item.Value.ToString();
 		}
 		return res;
 	}
@@ -76,4 +98,6 @@ public static class FileHelper{
 		var dict = new Godot.Collections.Dictionary<string, Variant>((Godot.Collections.Dictionary)json.Data);
 		return dict;
 	}
+
+	
 }

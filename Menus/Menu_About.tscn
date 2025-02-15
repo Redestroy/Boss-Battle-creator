@@ -1,0 +1,52 @@
+[gd_scene load_steps=3 format=3 uid="uid://dp55lxv3mc5vr"]
+
+[ext_resource type="Script" path="res://Menus/Menu_About.cs" id="1_mlmla"]
+[ext_resource type="Texture2D" uid="uid://ceqp1ycnoujvs" path="res://Assets/Menus/TextImg/About.png" id="2_a6fov"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_mlmla")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 1154.0
+offset_bottom = 650.0
+
+[node name="About" type="RichTextLabel" parent="."]
+layout_mode = 0
+offset_left = 327.0
+offset_top = 133.0
+offset_right = 799.0
+offset_bottom = 491.0
+text = "About text box"
+
+[node name="Back" type="Button" parent="."]
+layout_mode = 0
+offset_left = 816.0
+offset_top = 560.0
+offset_right = 887.0
+offset_bottom = 595.0
+text = "Back"
+
+[node name="DebugLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 969.0
+offset_top = 10.0
+offset_right = 1133.0
+offset_bottom = 33.0
+text = "About text box menu"
+
+[node name="Title" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 390.0
+offset_top = 4.0
+offset_right = 747.0
+offset_bottom = 127.0
+texture = ExtResource("2_a6fov")
+
+[connection signal="pressed" from="Back" to="." method="_on_back_pressed"]

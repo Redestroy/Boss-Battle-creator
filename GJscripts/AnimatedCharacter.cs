@@ -19,16 +19,19 @@ public partial class Deck<T>
     }
 }
 
-public partial class Move{
+public partial class Move : Resource{
     int size;
 
     int num_of_actions;
 
-    List<int> action_sequence;
-    Dictionary<int, Action> actions;
-    List<double> timings;
+    [Export]
+    Godot.Collections.Array<int> action_sequence;
+    [Export]
+    Godot.Collections.Dictionary<int, string> actions;
+    [Export]
+    Godot.Collections.Array<double> timings;
     
-    public int AddAction(Action action){
+    public int AddAction(string action){
         actions[size] = action;
         size++;
         return size - 1;
@@ -44,18 +47,20 @@ public partial class Move{
         }
     }
     
-    public void AddActionToSequence(Action action){
+    public void AddActionToSequence(string action){
         int index = 0;
-        if(actions.ContainsValue(action)){
-            index = AddAction(action);
-            action_sequence.Append(index);
-        }else{
+        //actions.ContainsKey(action);
+        //if(actions.Contains<string>(action)){
+        //    index = AddAction(action);
+        //    action_sequence.Append(index);
+        //}else
+        {
             index = FindByValue(actions, action);
             action_sequence.Append(index);
         }
     }
 
-    public int FindByValue(Dictionary<int, Action> actions, Action action){
+    public int FindByValue(Godot.Collections.Dictionary<int, string> actions, string action){
         foreach (var pair in actions){
             if (pair.Value == action){
                 return pair.Key;
@@ -68,6 +73,8 @@ public partial class Move{
         Timer timer = new Timer();
     }
 }
+
+
 
 public partial class AnimatedCharacter: CharacterBody3D{
     private Skeleton3D skeleton3D;

@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://dherfxuqn3hp2" path="res://Assets/Paint/LifeBarProgress.png" id="5_om7ml"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_p8sg2"]
+radius = 0.7
 
 [sub_resource type="BoxMesh" id="BoxMesh_caedx"]
 
@@ -119,9 +120,13 @@ shape = SubResource("SphereShape3D_p8sg2")
 
 [node name="Character" type="Node3D" parent="Pivot"]
 
+[node name="Self" type="Marker3D" parent="Pivot/Character"]
+transform = Transform3D(0.996565, -0.0486781, 0.0669898, 4.93162e-10, 0.808976, 0.587842, -0.0828081, -0.585823, 0.806198, 0, 0, 0)
+
 [node name="SoftBody3D" type="SoftBody3D" parent="Pivot/Character"]
 mesh = SubResource("BoxMesh_caedx")
 surface_material_override/0 = SubResource("StandardMaterial3D_qelcy")
+collision_mask = 255
 parent_collision_ignore = NodePath("../../..")
 pinned_points = [1]
 attachments/0/point_index = 1
@@ -144,9 +149,11 @@ transform = Transform3D(0.996565, -0.0486781, 0.0669898, 4.93162e-10, 0.808976, 
 
 [node name="Camera3D" type="Camera3D" parent="Marker3D"]
 transform = Transform3D(0.999495, -0.0288333, -0.0134252, 0.021675, 0.926394, -0.37593, 0.0232764, 0.375449, 0.92655, -0.150643, -0.644367, 3.46284)
+fov = 81.3
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Marker3D/Camera3D"]
 transform = Transform3D(0.1, -3.72529e-10, -2.23517e-09, 3.72529e-10, 0.1, 0, 2.23517e-09, -8.32668e-18, 0.1, 0, 0, 0)
+visible = false
 mesh = SubResource("SphereMesh_tevcw")
 skeleton = NodePath("../..")
 surface_material_override/0 = SubResource("StandardMaterial3D_rmrvt")

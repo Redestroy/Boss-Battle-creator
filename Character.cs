@@ -17,6 +17,7 @@
 // 8) Add core marker                                                       // Add a marker to character layout the represents their core - add
 // 9) Activity tracker                                                      // Track cooldowns, active moves and animations, might just need to use a status struct - add
 // 10) For collision object, see if it possible to use deeper children instead (due to transforms) or if parent nodes should be made
+// 11) Problem with teleporting player after adding it as child of arena
 
 using Godot;
 using System;
@@ -248,15 +249,20 @@ public class MovementExecutor{
             default:
             
             GD.Print($"Action not supported {parts[0]}");
+            OnExecuteFailed(order);
             break;
         }
     }
 
-    public void OnUpdate(double delta, Godot.Vector3 v, Transform3D t3, bool iof, bool input_happened){
+    public virtual void OnExecuteFailed(string order){
+
+    }
+
+    public void OnUpdate(double delta, Godot.Vector3 v, Transform3D t3, bool iof, bool input_happened, bool teleport){
         last_delta = delta;
         // Default move set
         // 1) Create a cooldown that resets velocity on no input
-        if(!input_happened && !at_rest){
+        if(!input_happened && !at_rest && !teleport){
             counter++;
             if(counter > cooldown){
                 // Do rest
@@ -266,7 +272,6 @@ public class MovementExecutor{
             }
         }
         SyncWithCharacter(v, t3, iof);
-        //Move gravity
     }
 
     public Godot.Vector3 GetVelocity(){
@@ -286,7 +291,7 @@ public class MovementExecutor{
     }
 }
 
-public abstract partial class Character : CharacterBody3D
+public abstract partial class Character : CharacterBody3D, IArenaObject
 {
     [Export]
 	public float Speed = 5.0f;
@@ -312,6 +317,9 @@ public abstract partial class Character : CharacterBody3D
     [Export]
     public float FallAcceleration { get; set; } = 75;
 
+    [Export]
+    public string ArenaAlias {get; set;} = "character";
+
     // Executors
     private AnimationPlayer animationPlayer;
     private MovementExecutor movementExecutor;
@@ -325,9 +333,11 @@ public abstract partial class Character : CharacterBody3D
     private bool no_input = true;
     private float scale = 1.0f;
     private bool scale_changed = false;
+    private bool teleport = false;
 
     public override void _Ready()
 	{
+        
         base._Ready();
         animationPlayer = GetNodeOrNull<AnimationPlayer>("AnimationPlayer");
         if(animationPlayer==null){
@@ -368,13 +378,17 @@ public abstract partial class Character : CharacterBody3D
         //if(no_input && !idle){
         //    movementExecutor.Rest();
         //}
-        Transform = movementExecutor.GetTransform3D();
+        if(!teleport) Transform = movementExecutor.GetTransform3D();
         //Transform.ScaledLocal(scale);
         if(scale_changed) Rescale(scale);
         Velocity = movementExecutor.GetVelocity();
         DoMoveAndCollide();
-        movementExecutor.OnUpdate(delta, Velocity, Transform, IsOnFloor(), !no_input);
+        movementExecutor.OnUpdate(delta, Velocity, Transform, IsOnFloor(), !no_input, teleport);
         no_input = true;
+        if(teleport){
+            teleport = false;
+            //return;
+        }
         //int id = GetCurrentMove();
         //Move(id);
         //DoMoveAndCollide();
@@ -393,9 +407,10 @@ public abstract partial class Character : CharacterBody3D
     public static Character Spawn(Node3D parent, Marker3D spot, PackedScene packedScene){
 		// Spawn instance at location      
         Character character = packedScene.Instantiate() as Character;   /* Instantiate */
-        parent.AddChild(character);
-        character.TeleportTo(spot);  
-                                       /* and teleport to spawn point */
+        GD.Print($"Spawning character {character}");
+        character.TeleportTo(spot);
+        parent.AddChild(character);                                 /* and teleport to spawn point */
+        GD.Print($"Done Spawning character {character}");
         return character;                                         /* And add as child to */
 	}
 
@@ -414,11 +429,23 @@ public abstract partial class Character : CharacterBody3D
     public void TeleportTo(Marker3D spot){
         // Issue with teleporting after being added as child of the arena
         // Look into it
-        if(spot == null) return; //Fail silently. Later may add a cancelled teleport effect.
+        if(spot == null) {
+        GD.Print("No spot given");
+        return;
+        } //Fail silently. Later may add a cancelled teleport effect.
+        //Godot.Transform3D coordinates = spot.GlobalTransform;
+        teleport = true;
         Godot.Vector3 coordinates = spot.GlobalPosition;
         string character_name = GetName();
 		GD.Print($"Teleporting character {character_name} to " + coordinates.ToString());
-		this.GlobalPosition = coordinates;
+        if(!this.IsInsideTree()){
+		//this.GlobalTransform = coordinates;
+            this.Position = coordinates;
+        }else{
+            this.LookAtFromPosition(coordinates, this.GetParent<Node3D>().GlobalTransform.Origin);
+            this.ForceUpdateTransform();
+        }
+        //
     }
 
     public void Move(int move_id){
@@ -465,10 +492,11 @@ public abstract partial class Character : CharacterBody3D
     }
 
     public string GetName(){
-        return "character";
+        return ArenaAlias;
     }
 
     public void AddAnimationsToMoveKeys(){
+        move_keys = new List<string>();
         animationPlayer.GetAnimationList();
         foreach(var animation in animationPlayer.GetAnimationList()){
             move_keys.Add($"AnimationPlayer/{animation}");
@@ -493,6 +521,8 @@ public abstract partial class Character : CharacterBody3D
             move_deck_ids[counter++] = item;
         }
     }
+
+    //TODO: Create a function to switch around two move keys, related to move deck editor UI
 
     public void SetScale(float factor){
         scale = factor;
@@ -563,6 +593,27 @@ public abstract partial class Character : CharacterBody3D
                 OnAreaEntered(collision.GetCollider() as Area3D);
             }
 		}
+    }
+
+    public Marker3D GetSelfPositionTargetMarket(){
+        return FindMarker("Self");
+    }
+
+
+    public static Node GetRoot(Node myself){
+        Node root = myself.GetParent();
+        GD.Print($"Looking for arena1 {root}");
+        if(root == null){
+            return myself;
+        }
+        Node temp = root;
+        GD.Print($"Looking for arena2 {temp}");
+        while(temp != null){
+            GD.Print($"Looking for arena3 {temp}");
+            root = temp;
+            temp = temp.GetParent();
+        }
+        return root;
     }
 
 

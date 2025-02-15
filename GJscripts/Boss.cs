@@ -4,13 +4,28 @@ using System.Collections.Generic;
 
 // TODO 
 // 1) Agent script injection
-// 2) Observer
-// 3) Extends EnvEnemy (or Hostile) for Targeting
+// 2) Observer                                      Kinda Done
+// 3) Extends EnvEnemy (or Hostile) for Targeting   Kinda Done
 // 4) Handle saving the boss state
 
 // TODO Extend Boss
-// 1) Customize decks
-// 2) Add custom controller
+// 1) Customize decks                               In progress
+// 2) Add custom controller                         In progress             
+            // Adding controllers to handle script events
+            // Specific controllers for boss
+            // Specific controllers for Mob
+            // Arena related controllers
+            // Cutscene controller -    This controller is arena related, but may be abstracted in a way
+            //                          Cutscenes are played during the triggers, but they may differ as there may be
+            //                              Slide cutscenes (Think simple text, slides, animations and fade in) - Stored in BossLair Resources
+            //                              Video cutscenes (Prerecorded/Prerendered cutscene that plays a video) - Stored in BossLair Resources
+            //                              Player cutscenes (Constrain all arena objects? and pan and play animations while panning a player cutscene cam) - Stored in references to animations
+            //                              Viewport cutscenes (Use cameras from an arena to show different viewports and get a more dynamic cutscene) - Stored in references to animations and viewport switching
+            // Event controller -       This controller is arena dependent
+            //                          Arena controls an event deck - a deck of event aliases that lists all events possible in an arena
+            //                          Note: Might be Lair specific
+            //                          Arena will do an event if the PlayEvent(string) function is called
+            //
 // 3) Organize move decks
 // 4) Add the randomization stuff
 
@@ -25,9 +40,72 @@ public class Action{
 	} 
 }
 
+
 public class Observation{
-	Dictionary<string, Tuple<string,string>> data;
+	public Dictionary<string, Tuple<string,string>> Data{get;set;}
+
+    public Observation(Dictionary<string, Tuple<string,string>> data){
+        Data = data;
+    }
 }
+
+public abstract class Observer{
+    private Observation observation;
+    public Observer(){
+        Dictionary<string,Tuple<string,string>> observation1 = new Dictionary<string,Tuple<string,string>> ();
+        observation = new Observation(observation1);
+    }
+
+    public void AddObservation(string label, string type, string formatted_data){
+        observation.Data[label] = new Tuple<string,string>(type, formatted_data);
+    }
+
+    public abstract Observation GetObservation();
+    public abstract void OnUpdate();
+
+
+}
+
+public class TargetObserver : Observer{
+
+    public Arena WorldArena{get;set;}
+    Marker3D TargetMarker{get;set;}
+
+    IEnvEnemy parent;
+
+    public TargetObserver(IEnvEnemy parent, Arena arena) : base(){
+        parent.SetObserver(this);
+        WorldArena = arena;
+    }
+
+    public Marker3D GetTargetMarker(){
+        if(TargetMarker == null){
+            UpdateMarker();
+        }
+        return TargetMarker;
+    }
+
+    public override Observation GetObservation(){
+        //Dictionary<string,Tuple<string,string>> observation = new Dictionary<string,Tuple<string,string>> ();
+        //observation["Target"] = new Tuple<string, string>("Marker3D", $"{GetTargetMarker().ToString()}");
+        AddObservation("Target", "Marker3D", $"{GetTargetMarker().ToString()}");
+        return this.GetObservation(); 
+    }
+
+    public void UpdateMarker(){
+        if(WorldArena == null){
+            GD.Print("Arena not set");
+            TargetMarker = new Marker3D();
+            return;
+        }
+        TargetMarker = WorldArena.GetTargetMarker("Player");
+    }
+
+    public override void OnUpdate(){
+        UpdateMarker();
+    }
+}
+
 
 //Todo change to interface
 public abstract class AgentScript{
@@ -42,22 +120,18 @@ public abstract class AgentScript{
 
 public partial class BossScript: AgentScript{
 
-	private Dictionary<string, Move> slime_moves;
-	private Dictionary<string, Animation> slime_animations;
+	private Boss boss;
 	int last_result;
 	bool is_move_in_progress;
 	Move current_move;
 
-
-
-	public BossScript(Dictionary<string, Move> moves, Dictionary<string, Animation> animations){
-		slime_moves = moves;
-		slime_animations = animations;
+	public BossScript(Boss boss){
+        this.boss = boss;
 		last_result = -1;
 		is_move_in_progress = false;
-		if(moves.TryGetValue("Idle", out Move move)){
-			current_move = move;
-		}
+		//if(this.boss.move_deck.TryGetValue("Idle", out Move move)){
+		//	current_move = move;
+		//}
 	}
 
 	public override Action get_action(Observation observation){
@@ -86,7 +160,7 @@ public partial class BossScript: AgentScript{
 		// <"position": <"Vector3D", "{x,y,z}">>
 		// <"is_wall": <"bool", "true">>
 		// <"wall_distance": <"double", "dist">>
-		return new Observation();
+		return null;//new Observation();
 	}
 
 	public override void DoAction(Action action){
@@ -95,7 +169,33 @@ public partial class BossScript: AgentScript{
 	}
 
     public override void Execute(string order){
-        GD.Print($"Boss Executing order {order}");
+        GD.Print($"Boss Executing script order {order}");
+        //TODO split order and check for shorthands in the shorthand dict
+        switch(order){
+
+            case "Movement":
+                // TODO add chase group
+                //Move();
+                // TODO add wander group
+                // TODO add stance group
+            break;
+            case "Attack":
+                //TODO do one of the attacks from attack group
+            break;
+            case "Ultimate":
+                //TODO do ultimate attack on target
+            break;
+            case "Event":;
+                //Draw from event deck
+                //Arena.PlayEvent(order2);
+            break;
+            case "Cutscene":;
+                //cutscene_player.PlayCutscene(order2);
+            break;
+            default:
+                GD.Print($"Unsupported order {order}");
+            break;
+        }
     }
 
 	public override void OnUpdate(double delta){
@@ -106,6 +206,12 @@ public partial class BossScript: AgentScript{
 			// idle logic
 		}
 	}
+
+    public void PlayCutscene(string cutscene_key){
+        //if(cutscene_player.ContainsKey(cutscene_key)){
+        //    cutscene_player.PlayCutscene(cutscene_key);
+        //}
+    }
 }
 
 
@@ -117,10 +223,16 @@ public partial class Boss : Character, IEnvEnemy, IDamageable{
     [Signal]
     public delegate void PlayerKilledEventHandler();
 
+    [Export]
+    public Weapon Weapon{ get; set; }
+
     public int CollisionDamage{get; set;} = 20;
     public string Warcry{get; set;} = "Fee Fii Foo";
 
     private Heart heart;
+    private Vitriol vitriol;
+
+    private AgentScript script;
     public const int MaxHealth = 2000;
     public int Health{
         get{
@@ -131,16 +243,32 @@ public partial class Boss : Character, IEnvEnemy, IDamageable{
         }}
     
     private Arena arena;
-    public Character Target{get; set;}
+    public Observer Target{
+        get{
+            return this.vitriol.Target;
+        } 
+        set{
+            this.vitriol.Target = value;
+        }
+        }
     private List<string> move_groups;
+
+    private int rithm_counter = 0;
+    private int rithm_period = 12;
+    private int current_move_id = 0;
 
     public override void _Ready()
 	{
         base._Ready();
-        arena = GetParent<Arena>();
+        
+        arena = Character.GetRoot(this) as Arena;   // Later may search for node named arena from root 
         heart = new Heart(this,MaxHealth);
+        vitriol = new Vitriol(this, 15);
+        TargetObserver observer = new TargetObserver(this, arena);
+        vitriol.SetObserver(observer);
 		heart.Damaged += OnDamage;
 		heart.Died += OnDeath;
+        current_move_id = 0;//FindKeyForValue("Idle");
     }
 
     public override void _Process(double delta)
@@ -153,11 +281,16 @@ public partial class Boss : Character, IEnvEnemy, IDamageable{
         base._PhysicsProcess(delta);
     }
 
+    public void SetObserver(Observer observer){
+        vitriol.SetObserver(observer);
+    }
+
     public int GetHealth(){
         return Health;
     }
 
     public void OnDamage(int dmg){
+        heart.OnDamage(dmg);
         OnDamage();
     }
 
@@ -168,18 +301,28 @@ public partial class Boss : Character, IEnvEnemy, IDamageable{
     }
 
     public override int GetCurrentMove(){
-        // TODO add the random number picker code later
-        bool is_idle = true;
+        bool is_idle = current_move_id == 0;
 		if(is_idle){
 			Random rand = new Random();
-			return rand.Next(0, move_deck_ids.Keys.Count);
-		}
+			if(rithm_counter%rithm_period == 0){
+                current_move_id = rand.Next(0, move_deck_ids.Keys.Count);
+            }else{
+                current_move_id = rithm_period; //FindKeyForValue("Idle");
+            }
+            rithm_counter++;
+		}else{
+
+        }
         return 0;
     }
 
     public override Marker3D FindMarker(string node_name){
         // TODO add the arena to pick the marker
-        return null;
+        if(node_name == "Self"){
+			return this.GetNode<Marker3D>("Pivot/Character/Self");
+		}
+        string marker_path_prefix = "";//"Skymove/";
+		return arena.GetNode<Marker3D>($"{marker_path_prefix}{node_name}");
     }
     public override void Execute(string executor, string order){
         string boss_name = "boss";
@@ -315,6 +458,18 @@ public partial class Boss : Character, IEnvEnemy, IDamageable{
 		}
     }
 
+    protected Heart GetHeart(){
+        return heart;
+    }
+
+    protected Vitriol GetVitriol(){
+        return vitriol;
+    }
+
+    public void AttachScript(AgentScript script){
+        this.script = script;
+    }
+
     public override Marker3D GetSpawn(){
         return FindMarker("SpawnBoss");
     }
@@ -368,11 +523,6 @@ public partial class Boss : Character, IEnvEnemy, IDamageable{
     }
 
     public Marker3D GetTargetMarker(){
-        if(Target != null){
-            return Target.FindMarker("Self");
-        }
-        else{
-            return null;
-        }
+        return vitriol.GetTargetMarker();
     }
 }

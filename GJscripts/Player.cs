@@ -18,22 +18,23 @@ using System.Linq;
 
 // NOTE minor limit - cannot create files in non existing directories.
 
-public partial class Player : Character, IDamageable{
+public partial class Player : Character, IDamageable
+{
 
 	[Signal]
-    public delegate void PlayerKilledEventHandler();
+	public delegate void PlayerKilledEventHandler();
 
 	[Signal]
-    public delegate void SaveStageEventHandler();
+	public delegate void SaveStageEventHandler();
 
-	[Export] 
+	[Export]
 	public bool is_active = false;
 
 	[Export]
-    private int initial_health {get;set;} = 100; 
+	private int initial_health { get; set; } = 100;
 
 	[Export]
-    private int initial_damage {get;set;} = 20; 
+	private int initial_damage { get; set; } = 20;
 
 	public static bool player_selected = false;
 
@@ -45,7 +46,7 @@ public partial class Player : Character, IDamageable{
 	private Camera3D camera;
 	private PhysicsDirectSpaceState3D _space_state;
 	private static Player active_player;
-	private bool constrained; 
+	private bool constrained;
 
 	private Weapon weapon;
 	private RayCast3D raycast;
@@ -61,7 +62,8 @@ public partial class Player : Character, IDamageable{
 	public override void _Ready()
 	{
 		base._Ready();
-		if(!player_selected){
+		if (!player_selected)
+		{
 			// Select first player as active
 			GD.Print("Player selected as active");
 			is_active = true;
@@ -79,72 +81,81 @@ public partial class Player : Character, IDamageable{
 		label_player_health.Text = $"{heart.Health}";
 		var HUD = GetHUD();
 		var bar_player_health = HUD.GetNode<TextureProgressBar>("HealthBar");
-		bar_player_health.SetValueNoSignal(100*heart.Health/heart.MaxHealth);
+		bar_player_health.SetValueNoSignal(100 * heart.RelativeHealth);
 
- 		camera = GetNode<Camera3D>("Marker3D/Camera3D");
+		camera = GetNode<Camera3D>("Marker3D/Camera3D");
 		weapon = GetNode<Weapon>("Pivot/WeaponPivot/Weapon");
-		arena = GetParent<Arena>();
-		
+		this.ArenaAlias = "Player"; //export
+		arena = Character.GetRoot(this) as Arena;
+		//arena = GetParent<Node3D>();//GetParent<Arena>();
+		//TeleportTo(Spawn);
 		//raycast = GetNode<RayCast3D>("RayCast3D");
 	}
 
 	public override void _PhysicsProcess(double delta)
 	{
+		if(arena == null){
+			//arena = Character.GetRoot(this) as Arena;
+		}
 		base._PhysicsProcess(delta);
 		Vector3 velocity = Velocity;
 		_space_state = GetWorld3D().DirectSpaceState;
 
-		if (is_active && !constrained && heart.Alive ){  //
-		
-		foreach (var key in input_map.Keys){
-			if (Input.IsActionPressed(key))
-    		{
-				play_action(input_map[key]);
-    		}
+		if (is_active && !constrained && heart.Alive)
+		{  //
+
+			foreach (var key in input_map.Keys)
+			{
+				if (Input.IsActionPressed(key))
+				{
+					play_action(input_map[key]);
+				}
+			}
+
+			if (Input.IsActionPressed("Grow"))
+			{
+				//this.SetScale(3.0f);
+				OnDamage(-1);
+			}
+
+			if (Input.IsActionPressed("Shrink"))
+			{
+				//this.SetScale(0.3f);
+				OnDamage(1);
+			}
+
+			if (Input.IsActionPressed("Normalize"))
+			{
+				//this.SetScale(1f);
+				heart.Health = 100;
+				OnDamage(0);
+			}
+			//raycast. .CastTo = new Vector3(0, -rayLength, 0); // Pointing downwards
+			//raycast.Enabled = true;
+
+			// Check if the ray is colliding
+			//if (raycast.IsColliding())
+			//{
+			//var collider = (CollisionObject3D)raycast.GetCollider();
+			// Optionally, check if it's terrain (if your terrain is in a specific group)
+			//if (collider.HasGroup("terrain"))
+			//{
+			//    GD.Print("Colliding with terrain!");
+			//}
+			//}
+
 		}
-
-		if (Input.IsActionPressed("Grow"))
-    	{
-			//this.SetScale(3.0f);
-			OnDamage(-1);
-    	}
-
-		if (Input.IsActionPressed("Shrink"))
-    	{
-			//this.SetScale(0.3f);
-			OnDamage(1);
-    	}
-
-		if (Input.IsActionPressed("Normalize"))
-    	{
-			//this.SetScale(1f);
-			heart.Health = 100;
-			OnDamage(0);
-    	}
-		//raycast. .CastTo = new Vector3(0, -rayLength, 0); // Pointing downwards
-        //raycast.Enabled = true;
-
-        // Check if the ray is colliding
-        //if (raycast.IsColliding())
-        //{
-            //var collider = (CollisionObject3D)raycast.GetCollider();
-            // Optionally, check if it's terrain (if your terrain is in a specific group)
-            //if (collider.HasGroup("terrain"))
-            //{
-            //    GD.Print("Colliding with terrain!");
-            //}
-        //}
-
-		}
-        OnPhysicsProcess(delta);
+		OnPhysicsProcess(delta);
 	}
 
 
-	public Player GetActivePlayer(){
+	public Player GetActivePlayer()
+	{
 		return active_player;
 	}
 
-	public void play_action(string action_tag){ // action tag is actually move already, leaving for testing but may change later
+	public void play_action(string action_tag)
+	{ // action tag is actually move already, leaving for testing but may change later
 		Move(action_tag);
 		/*
 		if (action_tag == "LEFT"){
@@ -174,116 +185,140 @@ public partial class Player : Character, IDamageable{
 		}
 		*/
 		GD.Print(action_tag);
-        OnPlayAction(action_tag);
+		OnPlayAction(action_tag);
 	}
 
-//	public void rotate(float delta){
-//		Transform3D transform = Transform;
-//		Vector3 axis = new Vector3(0, 1, 0);
-//		transform.Basis = transform.Basis.Rotated(axis, delta);
-//		Transform = transform;
-//	}
+	//	public void rotate(float delta){
+	//		Transform3D transform = Transform;
+	//		Vector3 axis = new Vector3(0, 1, 0);
+	//		transform.Basis = transform.Basis.Rotated(axis, delta);
+	//		Transform = transform;
+	//	}
 
-//	public void move(float delta){
-//		Transform3D transform = Transform;
-//		transform = transform.TranslatedLocal(new Vector3(0,0,delta));
-//		Transform = transform;
-//	}
+	//	public void move(float delta){
+	//		Transform3D transform = Transform;
+	//		transform = transform.TranslatedLocal(new Vector3(0,0,delta));
+	//		Transform = transform;
+	//	}
 
-	public string get_player_tag_from_cast(){
+	public string get_player_tag_from_cast()
+	{
 		return "MISS";
 	}
 
-	public void change_player(string player_tag){
+	public void change_player(string player_tag)
+	{
 		//Get node from player tag or pass it as arg, then set it active
 		//GetTree().UniqueName(player_tag).set_active;
 		is_active = false;
 	}
 
-	public void _set_active(){
+	public void _set_active()
+	{
 		active_player.change_player("PLACEHOLDER");
 		active_player = this;
 		camera.MakeCurrent();
 		is_active = true;
 	}
 
-	public virtual void _on_input_event(){
-        GD.Print("Clicked on player");
-    }
+	public virtual void _on_input_event()
+	{
+		GD.Print("Clicked on player");
+	}
 
-    public virtual void OnPlayAction(string tag){
+	public virtual void OnPlayAction(string tag)
+	{
 		// Send the action to characters move deck
-    }
+	}
 
-     public virtual void OnPhysicsProcess(double delta){
+	public virtual void OnPhysicsProcess(double delta)
+	{
 
-        base._PhysicsProcess(delta);
-    }
+		base._PhysicsProcess(delta);
+	}
 
-	public void StoreState(){
+	public void StoreState()
+	{
 		//load health, weapon and modifiers to file/singleton to store info between scenes
 	}
 
-	public void RestoreState(){
+	public void RestoreState()
+	{
 		// Read info (for variables) from file
 	}
 
-	public void SaveArena(){
+	public void SaveArena()
+	{
 		EmitSignal(SignalName.SaveStage);
 		//load health, weapon and modifiers to file/singleton to store info between scenes
 	}
 
-	public void Constrain(){
+	public void Constrain()
+	{
 		constrained = true;
 	}
 
-	public void Release(){
+	public void Release()
+	{
 		constrained = false;
 	}
-	
-    public int GetHealth(){
-        return heart.Health;
-    }
 
-	public void OnDamage(int dmg){
+	public int GetHealth()
+	{
+		return heart.Health;
+	}
+
+	public void OnDamage(int dmg)
+	{
+		heart.OnDamage(dmg);
 		GD.Print("Ouch! That hurt");
-        UpdateLifeBar();
-    }
+		UpdateLifeBar();
+	}
 
-	public void UpdateLifeBar(){ //NIT Maybe change getting a reference each time (or not)
+	public void UpdateLifeBar()
+	{ //NIT Maybe change getting a reference each time (or not)
 		var HUD = GetHUD();
 		var bar_player_health = HUD.GetNode<TextureProgressBar>("HealthBar");
 		var label_player_health = HUD.GetNode<Label>("Health");
 		label_player_health.Text = $"{heart.Health}";
-		bar_player_health.SetValueNoSignal(100*heart.Health/heart.MaxHealth);
+		bar_player_health.SetValueNoSignal(100 * heart.RelativeHealth);
 	}
 
-	public void OnFled(){
+	public void OnFled()
+	{
 		GD.Print("Player ran like a chicken");
 		OnDeath();
 	}
 
-    public void OnDeath(){
+	public void OnDeath()
+	{
 		// Play Death animation
 		EmitSignal(SignalName.PlayerKilled);
-    }
+	}
 
-	public override int GetCurrentMove(){
+	public override int GetCurrentMove()
+	{
 		return current_move; //current move is set on input
 	}
-    public override Marker3D FindMarker(string node_name){
+	public override Marker3D FindMarker(string node_name)
+	{
 		//Find child in arena object
-		string marker_path_prefix = "";
-		return arena.GetNode<Marker3D>($"{marker_path_prefix}/{node_name}");
+		if(node_name == "Self"){
+			return this.GetNode<Marker3D>("Pivot/Character/Self"); //TODO: Change to finding a uniquely named node
+		}
+		string marker_path_prefix = "";//"Skymove/";
+		return arena.GetNode<Marker3D>($"{marker_path_prefix}{node_name}");
 	}
-    public override void Execute(string executor, string order){
+	public override void Execute(string executor, string order)
+	{
 		GD.Print($"Player should execute the following action: {executor} - {order}");
 	}
 
-	public override List<string> LoadMoveKeys(){
+	public override List<string> LoadMoveKeys()
+	{
 		string path = "user://PlayerGeneric_move_keys.json";
 		if (!Godot.FileAccess.FileExists(path))
-    	{
+		{
 			var keys = new List<string>(){
 				"AnimationPlayer/Idle"
 			};
@@ -301,17 +336,19 @@ public partial class Player : Character, IDamageable{
 		using var file = Godot.FileAccess.Open(path, Godot.FileAccess.ModeFlags.Read);
 		var godot_list = FileHelper.LoadJsonAsList(path);
 		return FileHelper.ConvertToList(godot_list);// Error! We don't have a save to load.
-		//var godot_dict2 = LoadJsonAsDict("user://PlayerGeneric/move_aliases.json");
-		//return ConvertToString(godot_dict2);// Error! We don't have a save to load.
+													//var godot_dict2 = LoadJsonAsDict("user://PlayerGeneric/move_aliases.json");
+													//return ConvertToString(godot_dict2);// Error! We don't have a save to load.
 	}
 
-	public override Dictionary<string, string> LoadAliases(){
+	public override Dictionary<string, string> LoadAliases()
+	{
 		// Load file "PlayerInputMap" from player settings
 		// load file as json
 		//JSON load
 		// create dict from json for input map
 		var godot_dict = FileHelper.LoadJsonAsDict("user://input_map.json");
-		if(godot_dict == null){
+		if (godot_dict == null)
+		{
 			// Can look into GUID to semi auto generate, but we are mostly interested in the key to action not in specific mapping names 
 			// input_map[ACTION NAME IN INPUT MAP] = ALIAS FOR THE MOVE so it is human readable AND for player it is the GENERIC move name (for boss or mob it may be a script action name), NOT CHARACTER SPECIFIC;
 			input_map = new Dictionary<string, string>();
@@ -330,19 +367,25 @@ public partial class Player : Character, IDamageable{
 			input_map["RESET"] = "Idle";
 			FileHelper.SaveAliasDictionaryAsJson(input_map, "user://input_map.json");
 		}
-		else{
+		else
+		{
 			input_map = FileHelper.ConvertToString(godot_dict);
 		}
 		// then map each move input to a key from the move deck from file, if file not present, just use default ordering from settings
-		if(Godot.FileAccess.FileExists("user://PlayerGeneric_move_aliases.json")){
+		if (Godot.FileAccess.FileExists("user://PlayerGeneric_move_aliases.json"))
+		{
 			// load in file
 			var godot_dict2 = FileHelper.LoadJsonAsDict("user://PlayerGeneric_move_aliases.json");
 			return FileHelper.ConvertToString(godot_dict2);
-		}else{
+		}
+		else
+		{
 			var move_deck_aliases = new Dictionary<string, string>();
-			for(int i = 0; i<input_map.Keys.Count; i++){
+			for (int i = 0; i < input_map.Keys.Count; i++)
+			{
 				var value_input = input_map.ElementAt(i).Value;
-				if(i<GetMoveKeys().Count){
+				if (i < GetMoveKeys().Count)
+				{
 					var key_moves = GetMoveKeys()[i];
 					move_deck_aliases[value_input] = key_moves;
 				}
@@ -352,53 +395,64 @@ public partial class Player : Character, IDamageable{
 		}
 	}
 
-    public override Marker3D GetSpawn(){
+	public override Marker3D GetSpawn()
+	{
 		return arena.GetNode<Marker3D>("SpawnPlayer");
 		//return FindMarker("SpawnPlayer");
 	}
 
-    public override string GetScenePath(){
+	public override string GetScenePath()
+	{
 		return this.scene_path;
 	}
 
-    //Collision handling
-    // On area interactions
-    public override void OnAreaEntered(Area3D area){
+	//Collision handling
+	// On area interactions
+	public override void OnAreaEntered(Area3D area)
+	{
 		GD.Print("Entered area");
 	}
-    //public abstract void OnTerrainAreaEntered(Terrain area);
-    //public abstract void OnTerrainAreaExited(Terrain area);
-    //public abstract void OnHazardAreaEntered(Hazard area); //Hazards
-    //public abstract void OnHazardAreaExited(Hazard area);
-    public override void OnAreaExited(Area3D area){
+	//public abstract void OnTerrainAreaEntered(Terrain area);
+	//public abstract void OnTerrainAreaExited(Terrain area);
+	//public abstract void OnHazardAreaEntered(Hazard area); //Hazards
+	//public abstract void OnHazardAreaExited(Hazard area);
+	public override void OnAreaExited(Area3D area)
+	{
 		GD.Print("Exited area");
 	}
-    // On collisions with Environment - Static body
-    public override void OnCollidedWithEnvironment(StaticBody3D collider){
-		if(!IsOnFloor()){
+	// On collisions with Environment - Static body
+	public override void OnCollidedWithEnvironment(StaticBody3D collider)
+	{
+		if (!IsOnFloor())
+		{
 			GD.Print("Hit environment wall");
 		}
 	}
-    // On collisions with objects - Rigid body
-    public override void OnCollidedWithObject(RigidBody3D collider){
+	// On collisions with objects - Rigid body
+	public override void OnCollidedWithObject(RigidBody3D collider)
+	{
 		GD.Print("Hit object");
 	}
-    // On collisions with characters
-    public override void OnCollidedWithCharacter(CharacterBody3D collider){
+	// On collisions with characters
+	public override void OnCollidedWithCharacter(CharacterBody3D collider)
+	{
 		GD.Print("Ran into another character");
-		if(collider is EnvEnemy){
+		if (collider is EnvEnemy)
+		{
 			GD.Print("ITs ENEMY!!!");
 			var enemy = collider as EnvEnemy;
 			this.OnDamage(enemy.GetCollisionDamage());
 		}
 	}
-    // On collisions with weapons
-    public override void OnCollidedWithWeapon(Weapon collider){
+	// On collisions with weapons
+	public override void OnCollidedWithWeapon(Weapon collider)
+	{
 		GD.Print("Hit a weapon");
 		this.OnDamage(collider.Damage);
 	}
 
-	public Control GetHUD(){
+	public Control GetHUD()
+	{
 		//Problem when using spawning for players
 		return GetNode<Control>("HUD");
 	}
