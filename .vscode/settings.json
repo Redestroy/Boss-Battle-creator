@@ -1,11 +1,32 @@
 {
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
     "cSpell.words": [
+        "Bloodcleave",
+        "Chakram",
+        "cooldown",
+        "cooldowns",
         "Cutscene",
+        "cutscenes",
+        "Despawn",
+        "Doneish",
         "gamemode",
+        "gameplay",
         "gridmap",
+        "LACTION",
         "lvdf",
+        "overheal",
+        "overworld",
+        "Prerendered",
+        "RACTION",
+        "rithm",
+        "Skybox",
+        "Skymove",
+        "slottable",
+        "Targetable",
+        "Teleporting",
         "Testworld",
         "tscn",
-        "viewports"
+        "viewports",
+        "Warcry"
     ]
 }
