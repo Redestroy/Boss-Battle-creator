@@ -12,7 +12,7 @@ public partial class PlayerGeneric : Player
     public override void _Input(InputEvent @event)
     {
         base._Input(@event);
-        GD.Print(@event.AsText());
+        //GD.Print(@event.AsText());
     }
 
     public override void _PhysicsProcess(double delta)

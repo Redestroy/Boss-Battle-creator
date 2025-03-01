@@ -215,7 +215,7 @@ public partial class BossScript: AgentScript{
 }
 
 
-public partial class Boss : Character, IEnvEnemy, IDamageable{
+public partial class Boss : Character, IEnvEnemy, IDamageable, IVitriolic{
 
     [Signal]
     public delegate void BossVanquishedEventHandler();
@@ -231,6 +231,10 @@ public partial class Boss : Character, IEnvEnemy, IDamageable{
 
     private Heart heart;
     private Vitriol vitriol;
+
+    public Vitriol GetVitriol(){
+            return vitriol;
+    }
 
     private AgentScript script;
     public const int MaxHealth = 2000;
@@ -351,7 +355,7 @@ public partial class Boss : Character, IEnvEnemy, IDamageable{
 				"AnimationPlayer/Idle"
 			};
 			// load animations from Animation player
-			this.AddAnimationsToMoveKeys();
+			this.AddAnimationsToMoveKeys(keys);
 			// load shorthands from movement executor
 			// Currently hardcoded for testing movement executor
 			keys.Add("Script/BigJump");
@@ -460,10 +464,6 @@ public partial class Boss : Character, IEnvEnemy, IDamageable{
 
     protected Heart GetHeart(){
         return heart;
-    }
-
-    protected Vitriol GetVitriol(){
-        return vitriol;
     }
 
     public void AttachScript(AgentScript script){

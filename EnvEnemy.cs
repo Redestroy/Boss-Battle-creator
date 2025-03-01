@@ -11,6 +11,9 @@ using Godot;
 
 public interface IEnvEnemy : IArenaObject{
 
+    [Signal]
+    public delegate void EnemyDiedEventHandler();
+
     [Export]
     Weapon Weapon{ get; set; }
     public int CollisionDamage{get; set;}
@@ -21,10 +24,14 @@ public interface IEnvEnemy : IArenaObject{
     public int GetCollisionDamage();
     public void OnDeath();
 
-    public void OnDamage();
+    public void OnDamage(int damage);
     public void OnPlayerKilled();
     public void SetObserver(Observer observer);
     public Marker3D GetTargetMarker();
+}
+
+public interface IVitriolic{
+    public Vitriol GetVitriol();
 }
 
 public partial class EnvEnemy : CharacterBody3D, IEnvEnemy{
@@ -77,7 +84,7 @@ public partial class EnvEnemy : CharacterBody3D, IEnvEnemy{
         this.Target = observer;
     }
 
-    public void OnDamage(){
+    public void OnDamage(int damage = 0){
         //Play damaged animation
         GD.Print("Got Damaged");
     }
@@ -141,7 +148,7 @@ public partial class Vitriol : CharacterBody3D, IEnvEnemy{ //Added as child to I
         return null;
     }
 
-    public void OnDamage(){
+    public void OnDamage(int damage = 0){
         //Play damaged animation
         GD.Print("Got Damaged");
     }

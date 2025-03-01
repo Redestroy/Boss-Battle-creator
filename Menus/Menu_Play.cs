@@ -35,7 +35,7 @@ public partial class Menu_Play : Control
 	public void OnBack(){
 		// return to start scene
 		GD.Print("Back");
-		GetTree().ChangeSceneToFile("res://Menu_Start.tscn");
+		GetTree().ChangeSceneToFile("res://Menus/Menu_Start.tscn");
 	}
 
 	public void OnLaunch(string gamemode){

@@ -1,61 +1,72 @@
 using System.Collections.Generic;
 using Godot;
 using MRS.Task;
-namespace BossBattleClash
-{
-    public partial class SlimeState_Idle : GodotState{
-        public SlimeState_Idle(){
-            StateTag = "Idle";
-        }
-    }
+    
 
+    [GlobalClass]
     public partial class SlimeState_Cutscene : GodotState{
         public SlimeState_Cutscene(){
             StateTag = "Cutscene";
         }
     }
 
-    public partial class SlimeState_Wander : GodotState{
-        public SlimeState_Wander(){
-            StateTag = "Wander";
-        }
-    }
+    
 
+    [GlobalClass]
     public partial class SlimeState_Chase : GodotState{
+        
+        List<string> move_group;
+
         public SlimeState_Chase(){
             StateTag = "Chase";
+            next_state_on_timeout = "Idle";
+            Timeout = 5;
+            move_group = new List<string>(){
+                "SmallJump",
+                "Leap"
+            };
+            move = move_group[0];
+        }
+
+        public override void OnUpdate(Godot.Collections.Dictionary<string, Variant> observations)
+        {
+            base.OnUpdate(observations);
         }
     }
 
+    [GlobalClass]    
     public partial class SlimeState_Attack : GodotState{
         
-        private bool in_long_distance = false;
-        private bool in_short_distance = false;
+        private bool in_max_attack_distance = false;
+        private bool in_min_attack_distance = false;
         private bool visible = false;
         private bool done = false;
 
-        private Move activity;
+        private string activity;
         
         public SlimeState_Attack(){
             StateTag = "Attack";
+            next_state_on_timeout = "Stance";
+            Timeout = 5;
         }
 
-        public void OnUpdate(bool in_short_distance, bool in_long_distance, bool visible){
-            this.in_long_distance = in_long_distance;
-            this.in_short_distance = in_short_distance;
+        public override void OnUpdate(Godot.Collections.Dictionary<string, Variant> observations){
+            this.in_max_attack_distance = (bool)observations["in_max_attack_distance"];
+            this.in_min_attack_distance = (bool)observations["in_min_attack_distance"];
         }
 
-        public void GetMoveFromSubDeck(List<Move> moves){
+        public void GetMoveFromSubDeck(List<string> moves){
             //TODO implement - either use random or logic based on internal state
             activity = moves[0]; 
+            move = activity;
         }
 
         public override void OnInterrupt(){
             base.OnInterrupt();
-            if(in_long_distance){
+            if(in_max_attack_distance){
                 //next move is LightAttack
                 //activity = new Move("LACTION");
-            }else if(in_short_distance){
+            }else if(in_min_attack_distance){
                 //next move is 
                 //activity = new Move("LACTION");
             }
@@ -79,54 +90,36 @@ namespace BossBattleClash
         }
     }
 
+    [GlobalClass]
     public partial class SlimeState_Stance : GodotState{
         public SlimeState_Stance(){
             StateTag = "Stance";
-        }
-    }
-
-    public partial class SlimeState_Evade : GodotState{
-        
-        public SlimeState_Evade(){
-            StateTag = "Evade";
+            next_state_on_timeout = "Idle";
+            Timeout = 5;
+            move = "Idle";
         }
     }
 
     [GlobalClass]
-    public partial class StateMachine_Slime : Resource, IStateMachine
+    public partial class SlimeState_Evade : GodotState{
+        
+        public SlimeState_Evade(){
+            StateTag = "Evade";
+            next_state_on_timeout = "Idle";
+            Timeout = 5;
+            move = "Idle";
+        }
+    }
+
+    [GlobalClass]
+    public partial class StateMachine_Slime : StateMachine
     {
-        [Export]
-        public GodotStringGraph StringGraph { get; set; }
-
-        public IStringGraph stateDiagram{get;set;}
-
-        [Export]
-        public Godot.Collections.Dictionary<string, GodotState> States{get;set;}
-
-        [Export]
-        public string ActiveState{get; set;} = "Idle";
-
-        public MRS.Task.IStateMachine stateMachine;
-        // Make sure you provide a parameterless constructor.
-        // In C#, a parameterless constructor is different from a
-        // constructor with all default values.
-        // Without a parameterless constructor, Godot will have problems
-        // creating and editing your resource via the inspector.
         public StateMachine_Slime() : this(0, null, null) {}
 
-        public StateMachine_Slime( int id, GodotStringGraph string_graph, Godot.Collections.Dictionary<string, GodotState> states)
-        {
-            StringGraph = string_graph ?? new GodotStringGraph();
-            States = states ?? new Godot.Collections.Dictionary<string, GodotState>();
-            Init();
-        }
+        public StateMachine_Slime( int id, GodotStringGraph string_graph, Godot.Collections.Dictionary<string, GodotState> states) : base(id,string_graph, states){}
 
-        public void Init(){ // Inits the state machine from code
-            InitStates();
-            InitGraph();
-        }
-
-        public void InitStates(){
+        public override void OnInitStates(){
+            base.OnInitStates();
             SlimeState_Idle idle = new SlimeState_Idle();
             AddState(idle);
             SlimeState_Cutscene cutscene  = new SlimeState_Cutscene();
@@ -143,49 +136,40 @@ namespace BossBattleClash
             AddState(evade);
         }
 
-        public delegate void InStateFunction(Move move);
-
-        public void AttachToAll_InState(System.Action<string> isf){
-            foreach(var state in States){
-                state.Value.Connect( nameof(GodotState.SigInState), Callable.From(isf));
-            }
-        }
-
-        public void AddState(GodotState state){
-            States.Add(state.StateTag, state);
-        }
-
-        public void InitGraph(){
+        public override void OnInitGraph(){
             StringGraph.AddVertex("Idle", "Cutscene");      // OnEntered
             StringGraph.AddVertex("Idle", "Wander");        // OnTimeout
             StringGraph.AddVertex("Idle", "Chase");         // OnPlayerSeen
+            StringGraph.AddVertex("Idle", "Evade");         // OnCrit
             StringGraph.AddVertex("Cutscene", "Wander");    // OnFinished
             StringGraph.AddVertex("Wander", "Chase");       // OnPlayerSeen 
             StringGraph.AddVertex("Wander", "Idle");        // OnTimeout
+            StringGraph.AddVertex("Wander", "Evade");       // OnCrit
             StringGraph.AddVertex("Chase", "Attack");       // OnWithinRange
             StringGraph.AddVertex("Chase", "Stance");       // OnHit
             StringGraph.AddVertex("Chase", "Evade");        // OnCrit
-            StringGraph.AddVertex("Attack", "Attack");      // OnFinished(playerwithinrange)
-            StringGraph.AddVertex("Attack", "Chase");       // OnFinished(playeroutofrange)
+            StringGraph.AddVertex("Attack", "Attack");      // OnFinished(player_within_range)
+            StringGraph.AddVertex("Attack", "Chase");       // OnFinished(player_out_of_range)
             StringGraph.AddVertex("Attack", "Stance");      // OnDamageInterrupt
             StringGraph.AddVertex("Attack", "Evade");       // OnCritInterrupt
             StringGraph.AddVertex("Stance", "Attack");      // OnTimeout(PlayerInsideRange)
             StringGraph.AddVertex("Stance", "Chase");       // OnTimeout(PlayerOutOfRange)
             StringGraph.AddVertex("Stance", "Wander");      // OnTimeout(PlayerMissing)
             StringGraph.AddVertex("Evade", "Idle");         // OnTimeout()
+            stateDiagram = StringGraph;
         }
 
-        public void OnUpdate(){
-            GD.Print(ActiveState);
+        public override void OnUpdate(Godot.Collections.Dictionary<string, Variant> observations){
+            base.OnUpdate(observations);
             switch(ActiveState){
                 case "Idle":
-                    GD.Print("Idle");
+                    //GD.Print($"State: Idle, activity {this.States[ActiveState].move}");
                 break;
                 case "Cutscene":
                     GD.Print("Cutscene");
                 break;
                 case "Wander":
-                    GD.Print("Wander");
+                    //GD.Print("Wander");
                 break;
                 case "Chase":
                     GD.Print("Chase");
@@ -197,26 +181,11 @@ namespace BossBattleClash
                     GD.Print("Stance");
                 break;
                 case "Evade":
-                    GD.Print("Evade");
+                    //GD.Print("Evade");
                 break;
                 default:
                     GD.Print("Unknown state");
                 break;
             }
         }
-
-        public bool ChangeState(string target){
-            if(target == ActiveState){
-                States[ActiveState].Restart(); // Only useful if parameters are passed
-                return true; // This will return very late so use threads or something
-            }
-            if(stateDiagram.Contains(ActiveState, target)){
-                States[ActiveState].Interrupt(target); // Maybe call these later from a different spot like OnUpdate
-                States[target].Trigger();
-                return true; // This will return very late so use threads or something
-            }else{
-                return false;
-            }
-        }
     }
-}

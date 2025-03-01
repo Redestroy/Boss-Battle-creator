@@ -36,6 +36,9 @@ public partial class Player : Character, IDamageable
 	[Export]
 	private int initial_damage { get; set; } = 20;
 
+	[Export]
+	public int collision_damage { get; set; } = 5;
+
 	public static bool player_selected = false;
 
 	private int current_move = 0;
@@ -54,8 +57,9 @@ public partial class Player : Character, IDamageable
 
 	private int max_health;
 
-	private Heart heart;
+	public Heart heart; // add methods to privatize variable
 	private Arena arena; //// Note: for spawning use a separate interface as overworld should work a tad differently (as well as multiplayer) 
+	private HUD hud;
 
 	public Dictionary<string, string> input_map;
 
@@ -74,19 +78,24 @@ public partial class Player : Character, IDamageable
 		heart = new Heart(this, initial_health);
 		heart.Damaged += OnDamage;
 		heart.Died += OnDeath;
+		if(collision_damage < 5) collision_damage = 5;
+		hud = GetHUD();
+		if(hud!= null){
+			hud.SigEquipItem += SlotItem;
+			hud.SigDeEquipItem += DeSlotItem;
+		}
 		OnDamage(initial_damage);
-
-		var hud = GetHUD();
-		var label_player_health = hud.GetNode<Label>("Health");
-		label_player_health.Text = $"{heart.Health}";
-		var HUD = GetHUD();
-		var bar_player_health = HUD.GetNode<TextureProgressBar>("HealthBar");
-		bar_player_health.SetValueNoSignal(100 * heart.RelativeHealth);
+		hud.UpdateLifeBar();
 
 		camera = GetNode<Camera3D>("Marker3D/Camera3D");
 		weapon = GetNode<Weapon>("Pivot/WeaponPivot/Weapon");
 		this.ArenaAlias = "Player"; //export
-		arena = Character.GetRoot(this) as Arena;
+		arena = Character.GetRoot(this).GetNodeOrNull("Arena") as Arena;
+		GD.Print($"Arena {arena}"); // Add a case for overworld
+		if(arena != null){
+			arena.SigVictory += HUD_VictoryUpdate;
+			arena.SigDefeat += HUD_DefeatUpdate;
+		}
 		//arena = GetParent<Node3D>();//GetParent<Arena>();
 		//TeleportTo(Spawn);
 		//raycast = GetNode<RayCast3D>("RayCast3D");
@@ -148,6 +157,14 @@ public partial class Player : Character, IDamageable
 		OnPhysicsProcess(delta);
 	}
 
+	public void _on_door_looking_at_door(InputEvent ev, string door_text){
+        OnLookingAtDoor(ev, door_text);
+    }
+
+    public void OnLookingAtDoor(InputEvent ev, string door_text){
+		hud.UpdateHelpText(door_text);
+	}
+
 
 	public Player GetActivePlayer()
 	{
@@ -184,22 +201,9 @@ public partial class Player : Character, IDamageable
 			SaveArena();
 		}
 		*/
-		GD.Print(action_tag);
+		//GD.Print(action_tag);
 		OnPlayAction(action_tag);
 	}
-
-	//	public void rotate(float delta){
-	//		Transform3D transform = Transform;
-	//		Vector3 axis = new Vector3(0, 1, 0);
-	//		transform.Basis = transform.Basis.Rotated(axis, delta);
-	//		Transform = transform;
-	//	}
-
-	//	public void move(float delta){
-	//		Transform3D transform = Transform;
-	//		transform = transform.TranslatedLocal(new Vector3(0,0,delta));
-	//		Transform = transform;
-	//	}
 
 	public string get_player_tag_from_cast()
 	{
@@ -277,11 +281,7 @@ public partial class Player : Character, IDamageable
 
 	public void UpdateLifeBar()
 	{ //NIT Maybe change getting a reference each time (or not)
-		var HUD = GetHUD();
-		var bar_player_health = HUD.GetNode<TextureProgressBar>("HealthBar");
-		var label_player_health = HUD.GetNode<Label>("Health");
-		label_player_health.Text = $"{heart.Health}";
-		bar_player_health.SetValueNoSignal(100 * heart.RelativeHealth);
+		hud.UpdateLifeBar();
 	}
 
 	public void OnFled()
@@ -305,7 +305,11 @@ public partial class Player : Character, IDamageable
 		//Find child in arena object
 		if(node_name == "Self"){
 			return this.GetNode<Marker3D>("Pivot/Character/Self"); //TODO: Change to finding a uniquely named node
-		}
+		}else if(node_name == "Item"){
+            return this.GetNode<Marker3D>("Pivot/Character/ItemMarker");
+        }else if(node_name == "Weapon"){
+            return this.GetNode<Marker3D>("Pivot/WeaponPivot/WeaponMarker");
+        }
 		string marker_path_prefix = "";//"Skymove/";
 		return arena.GetNode<Marker3D>($"{marker_path_prefix}{node_name}");
 	}
@@ -320,10 +324,10 @@ public partial class Player : Character, IDamageable
 		if (!Godot.FileAccess.FileExists(path))
 		{
 			var keys = new List<string>(){
-				"AnimationPlayer/Idle"
+				"Idle"
 			};
 			// load animations from Animation player
-			this.AddAnimationsToMoveKeys();
+			this.AddAnimationsToMoveKeys(keys);
 			// load shorthands from movement executor
 			// Currently hardcoded for testing movement executor
 			keys.Add("Movement/DeltaFWD");
@@ -437,11 +441,12 @@ public partial class Player : Character, IDamageable
 	public override void OnCollidedWithCharacter(CharacterBody3D collider)
 	{
 		GD.Print("Ran into another character");
-		if (collider is EnvEnemy)
+		if (collider is IEnvEnemy)
 		{
 			GD.Print("ITs ENEMY!!!");
-			var enemy = collider as EnvEnemy;
+			var enemy = collider as IEnvEnemy;
 			this.OnDamage(enemy.GetCollisionDamage());
+			enemy.OnDamage(this.collision_damage);
 		}
 	}
 	// On collisions with weapons
@@ -451,9 +456,30 @@ public partial class Player : Character, IDamageable
 		this.OnDamage(collider.Damage);
 	}
 
-	public Control GetHUD()
+	public void AddItemInInventory(string node_path){
+		// Currently, just have a list in the hud that just has all the strings
+		// Later attach a node to player
+		// 1st) Load PackedScene
+		var packedScene = LoadItemScene(node_path);
+		// 2nd) Add PackedScene item name to the item list
+		string display_name = packedScene.GetState().GetNodeName(0);
+		int index = GetHUD().AddToItemList(display_name);
+		// 3rd) Save (item name, PackedScene) in dictionary under it's item index (get it from a different dict/file?)
+		inventory.Add(index, new Tuple<string, PackedScene>(display_name, packedScene));
+	}
+
+	public HUD GetHUD()
 	{
 		//Problem when using spawning for players
-		return GetNode<Control>("HUD");
+		return GetNode<HUD>("HUD");
+	}
+
+	// HUD methods
+	public void HUD_VictoryUpdate(){ // Move to HUD scripts
+		GetHUD().UpdateHelpText("You win!");
+	}
+
+	public void HUD_DefeatUpdate(){ // Move to HUD scripts
+		GetHUD().UpdateHelpText("You lose!");
 	}
 }

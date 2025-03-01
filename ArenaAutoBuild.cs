@@ -88,4 +88,9 @@ public partial class ArenaAutoBuild : Arena
 		env.Environment = ResourceLoader.Load<Godot.Environment>(world_blueprint["environment_path"]);
 		AddChild(env);
 	}
+
+	
+	public override IVitriolic GetEnemy(){
+		return null;
+	}
 }

@@ -42,7 +42,7 @@ public partial class Menu_Options : Control
 	public void OnBack(){
 		// return to start scene
 		GD.Print("Back");
-		GetTree().ChangeSceneToFile("res://Menu_Start.tscn");
+		GetTree().ChangeSceneToFile("res://Menus/Menu_Start.tscn");
 	}
 
 	public void OnSave(){

@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://GJscripts/Shade.cs" id="1_u1h7w"]
 [ext_resource type="PackedScene" uid="uid://faxtb2fxeop8" path="res://Assets/Shade.blend" id="3_af67l"]
 [ext_resource type="Texture2D" uid="uid://4c8p6hmo7hdd" path="res://Assets/Paint/LifeBarEmpty.png" id="3_rfhlj"]
-[ext_resource type="PackedScene" uid="uid://dpf1uemx8po85" path="res://WeaponChakram.tscn" id="4_1agw2"]
+[ext_resource type="PackedScene" uid="uid://dpf1uemx8po85" path="res://Weapons/WeaponChakram.tscn" id="4_1agw2"]
 [ext_resource type="Texture2D" uid="uid://c2mmstsuug84d" path="res://Assets/Paint/LifeBarFull.png" id="4_3jrjt"]
 [ext_resource type="Texture2D" uid="uid://d1q5lhwlubpso" path="res://Assets/Menus/TextImg/Play.png" id="4_um42u"]
 [ext_resource type="Texture2D" uid="uid://dherfxuqn3hp2" path="res://Assets/Paint/LifeBarProgress.png" id="5_0lyw3"]

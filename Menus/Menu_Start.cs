@@ -33,7 +33,7 @@ public partial class Menu_Start : Control
 		GD.Print("Play");
 		//string level_file = "res://Testworld.tscn";
 		//string level_file = "res://OpenWorld.tscn";
-		string level_file = "res://Menu_Play.tscn";
+		string level_file = "res://Menus/Menu_Play.tscn";
 		GetTree().ChangeSceneToFile(level_file);
 	}
 
@@ -43,16 +43,16 @@ public partial class Menu_Start : Control
 
 	public void OnLibrary(){
 		GD.Print("Library");
-		GetTree().ChangeSceneToFile("res://Menu_Library.tscn");
+		GetTree().ChangeSceneToFile("res://Menus/Menu_Library.tscn");
 	}
 
 	public void OnOptions(){
 		GD.Print("Options");
-		GetTree().ChangeSceneToFile("res://Menu_Options.tscn");
+		GetTree().ChangeSceneToFile("res://Menus/Menu_Options.tscn");
 	}
 
 	public void OnAbout(){
 		GD.Print("Options");
-		GetTree().ChangeSceneToFile("res://Menu_About.tscn");
+		GetTree().ChangeSceneToFile("res://Menus/Menu_About.tscn");
 	}
 }

@@ -13,9 +13,12 @@ public partial class Door : Node3D
 	[Export]
 	public string door_text{get; set;} = "Enter to proceed";
 
+	
+
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+		//Connect("input_event", new Callable(this, nameof(_on_input_event)));
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -33,7 +36,7 @@ public partial class Door : Node3D
 		// light up door
 		//If Raction
 		//Change scene to boss fight
-		if (ev.IsAction("Interact")){
+		if (ev.IsAction("INTERACT")){
 			OnDoorTriggered();
 		}else{
 			EmitSignal(SignalName.LookingAtDoor, ev, door_text);
@@ -42,6 +45,15 @@ public partial class Door : Node3D
 
 	public void OnDoorTriggered(){
 		GetTree().ChangeSceneToFile(scene_triggered);
+	}
+
+	public void TeleportTo(Marker3D spot){
+        if(!this.IsInsideTree()){
+			//this.GlobalTransform = coordinates;
+            this.Position = spot.Position;
+        }else{
+            this.GlobalPosition = spot.GlobalPosition;
+        }
 	}
 
 }

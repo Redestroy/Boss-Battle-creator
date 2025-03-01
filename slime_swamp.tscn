@@ -26,7 +26,7 @@ size = Vector3(15, 1, 30)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ou07n"]
 albedo_color = Color(0.226295, 0.0997684, 0.0568807, 1)
 
-[node name="Node3D" type="Node3D"]
+[node name="Lair" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_7ciqq")

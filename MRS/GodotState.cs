@@ -2,74 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Godot;
 
-public partial class GodotStringPair : Resource{
-    [Export]
-    public string From{get; set;} = "";
-    [Export]
-    public string To{get; set;} = "";
-
-    public string Key{
-        get{
-            return From;
-        } 
-        set{
-            From = value;
-        }
-    }
-    public string Value{
-        get{
-            return To;
-        } 
-        set{
-            To = value;
-        }
-    }
-
-    public GodotStringPair() : this("", "") {}
-
-    public GodotStringPair(string from = "", string to = ""){
-        From = from;
-        To = to;
-    }
-}
-
-public partial class GodotStringGraph : Resource, MRS.Task.IStringGraph{
-
-            [Export]
-            public Godot.Collections.Array<GodotStringPair> edge_list;
-            [Export]
-            public Godot.Collections.Array<GodotStringPair> wildcards; // wildcards work as follows - if one side has a wildcard, it means that all edges either can transition to a state, or from a state, basically a check override
-
-            public string wildcard = "*";
-
-            public GodotStringGraph(){
-                edge_list = new Godot.Collections.Array<GodotStringPair>();
-                wildcards = new Godot.Collections.Array<GodotStringPair>();
-            }
-
-            public void AddVertex(string from, string to){
-                // Duplicate check advised
-                if(Contains(from,to)) return; // do not add duplicate vertices
-                edge_list.Add(new GodotStringPair(from, to));
-            }
-
-            public bool Contains(string from, string to){
-                foreach(var pair in wildcards){
-                    if(pair.Key != wildcard && from != pair.Key) continue;
-                    if(pair.Value != wildcard && to != pair.Value) continue;
-                    return true;
-                }
-                foreach(var pair in edge_list){
-                    if(pair.Key != from) continue;
-                    if(pair.Value != to) continue;
-                    return true;
-                }
-                return false;
-            }
-        }
-
-
-
+[GlobalClass]
 public abstract partial class GodotState : Resource, MRS.Task.IState{
 
     [Signal]
@@ -87,11 +20,20 @@ public abstract partial class GodotState : Resource, MRS.Task.IState{
     [Export]
     public string StateTag{get;set;} = "Idle";
     [Export]
-    public string move;
+    public string move{get;set;} = "Idle";
     private bool interrupted;
     private string force_state_change;
+
+
+    [Export]
+    public double Timeout{get;set;} //Used for an external timer
+
     private string next_state{get;set;} //Used on Exit state. May be replaced by State reference
+    [Export]
+    public string next_state_on_timeout{get;set;} //Used on Exit state. May be replaced by State reference
     private bool IsActive{get;set;}
+
+    protected bool update_move = true;
     public MRS.Task.IStateMachine stateMachine{get;set;}
     public GodotState(){
         move = "new string()"; // Check type
@@ -175,11 +117,18 @@ public abstract partial class GodotState : Resource, MRS.Task.IState{
     }
     public virtual void InState(string activity)
     {
-        EmitSignal(SignalName.SigInState); // TODO Add activity as argument argument
+        if(update_move){
+            EmitSignal(SignalName.SigInState, activity); // TODO Add activity as argument argument
+            update_move = false;
+        }
         //Sleep
         //Also, maybe only notify on enter and exit
     }
     public virtual void OnExit(){
         EmitSignal(SignalName.SigOnExit);
+    }
+
+    public virtual void OnUpdate(Godot.Collections.Dictionary<string, Variant> observations){
+        
     }
 }

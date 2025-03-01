@@ -32,13 +32,20 @@ public interface IArenaObject{
 	public Marker3D GetSelfPositionTargetMarket();
 }
 
-public partial class Arena : Node3D
+public abstract partial class Arena : Node3D
 {
-	private double counter;
-	private Player player;
-	private Boss boss;
 
-	private bool active;
+	[Signal]
+	public delegate void SigVictoryEventHandler();
+
+	[Signal]
+	public delegate void SigDefeatEventHandler();
+	private double counter;
+	protected Player player;
+	protected IVitriolic main_enemy;
+	protected Vitriol main_enemy_vitriol;
+
+	protected bool active; // TODO add a getter and make private
 
 	private Control hud;
 	private Label label_player_health;
@@ -57,8 +64,8 @@ public partial class Arena : Node3D
 	private Godot.Collections.Dictionary<string, Marker3D> target_markers;
 	private Godot.Collections.Dictionary<string, Variant> event_deck;
 
+	protected Godot.Collections.Dictionary<string, Door> door_deck;
 
-	// Called when the node enters the scene tree for the first time.
 	public override async void _Ready()
 	{
 		counter = 0;
@@ -69,31 +76,20 @@ public partial class Arena : Node3D
 			//await RenderingServer.Singleton.ToSignal(GetParent(), SignalName.Ready);
 		}
 		target_markers = new Godot.Collections.Dictionary<string, Marker3D>();
-		//player = GetNode<Player>("Shade");
-		//player._set_active();
-		//boss = GetNode<Boss>("ShadeBoss");
-		
-		
-		//boss_health = boss.GetHealth();
-		//player_health = player.GetHealth();
-		//hud = player.GetHUD();
-		//label_player_health = hud.GetNode<Label>("Health");
-		//label_boss_health = hud.GetNode<Label>("BossHealth");
-		//bar_player_health = hud.GetNode<TextureProgressBar>("HealthBar");
-		//bar_boss_health = hud.GetNode<TextureProgressBar>("BossHealthBar");
-		//player_health_max = player_health;
-		//boss_health_max = boss_health;
-		//label_help = hud.GetNode<Label>("Help");
-		
-		// Add boss signal manually
-    	//boss.BossVanquished += OnVictory;
-		// Add player signal manually
-		//player.PlayerKilled += OnDefeat;
-		//player.SaveStage += OnSaveArena;
-
-		active = true;
 
 		//OnPlayerEntered(player);
+	}
+
+	public void PostReady(){
+		
+		player = GetNode<Player>("Player");
+		main_enemy = GetEnemy();
+		main_enemy_vitriol = main_enemy.GetVitriol();
+    	main_enemy_vitriol.EnemyDied += OnVictory;
+		player.PlayerKilled += OnDefeat;
+		player.SaveStage += OnSaveArena;
+		OnPlayerEntered(player);
+		active = true;
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -111,28 +107,37 @@ public partial class Arena : Node3D
 	}
 
 
-	public void OnUpdate(double delta){
-		//boss_health = boss.GetHealth();
-		//player_health = player.GetHealth();
+	public virtual void OnUpdate(double delta){
 		//UpdateHUD();
 	}
 
+	
 
-    public void OnVictory(){
+
+    public virtual void OnVictory(){
         //Kill boss
-		//boss.Despawn();
+		//main_enemy.Despawn(); // Handle this in child
         //Save screenshots
         //Spawn exit
-        //Door door = GetNode<Door>("VictoryDoor");
-        //Marker3D door_pos = GetNode<Marker3D>("SpawnVictoryDoor");
-        //door.GlobalPosition = door_pos.GlobalPosition;
-        //Trigger animation and lighting as well
+		GD.Print($"door deck {door_deck}");
+		if(door_deck.ContainsKey("keystone_victory")){
+        	Door door = door_deck["keystone_victory"]; //"VictoryDoor" // Change this to be less hardcoded - improve door deck
+			Marker3D door_pos = GetNode<Marker3D>("Skymove/SpawnVictoryDoor");
+        	door.TeleportTo(door_pos);
+		}else{
+			GD.Print("No Victory keystone found");
+		}
+		player.GetHUD().UpdateHelpText("You Win!");
+		EmitSignal(SignalName.SigVictory);
+		//Trigger animation and lighting as well
     }
 
-    public void OnDefeat(){
-        //Door door = GetNode<Door>("DefeatDoor");
-		//label_help.Text = "You died!";
-        //door.OnDoorTriggered();
+    public virtual void OnDefeat(){
+		EmitSignal(SignalName.SigVictory);
+        Door door = door_deck["keystone_enemy"];
+		player.GetHUD().UpdateHelpText("You died!", false);
+		active = false;
+        door.OnDoorTriggered();
     }
 
 	public void ExtractInfo(IArenaObject a_obj){
@@ -142,8 +147,8 @@ public partial class Arena : Node3D
 	public Marker3D GetTargetMarker(string key){
 		if(!target_markers.ContainsKey(key)){
 			GD.Print("Marker does not exist in the list");
-			foreach(var lkey in target_markers){
-				GD.Print($"{lkey.Key} in {target_markers[lkey.Key]}");
+			foreach(var marker_pair in target_markers){
+				GD.Print($"{marker_pair.Key} in {target_markers[marker_pair.Key]}");
 			}
 			return new Marker3D();
 		}
@@ -159,7 +164,7 @@ public partial class Arena : Node3D
 		bar_player_health.SetValueNoSignal(player_health/player_health_max);
 	}
 
-	public void OnPlayerEntered(Player player){
+	public virtual void OnPlayerEntered(Player player){
 		// Constrain player
 		//player.Constrain();
 		// Teleport Boss to start marker
@@ -176,6 +181,8 @@ public partial class Arena : Node3D
 		// release player
 		//player.Release();
 	}
+
+	public abstract IVitriolic GetEnemy();
 
 	public void OnSaveArena(){
 		Save();

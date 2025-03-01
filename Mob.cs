@@ -20,6 +20,14 @@
 // 1) Extends Env Enemy                     Kinda done
 // 2) Adds simple observer                  Kinda done
 // 3) Add simple movement controller        In progress
+// 4) Implement the state machine           In progress
+//      1) Idle state: Loop idle animation
+//      2) Cutscene state: skip for now
+//      3) Wander: Loop Shrug animation and add random walk
+//      4) Chase: Jumps toward player
+//      5) Attack: Roll and do an attack from the 4 attacks
+//      6) Stance: Look Towards player and move towards mean distance((Max attack dist- min attack distance)/2 + min attack distance)
+//      7) Evade: Look away from player and move forward at max speed
 // 4) Add navigator perhaps?                
 // 4) Maybe can use as projectile           TODO
 
@@ -56,7 +64,11 @@ public class MobMovementExecutor : MovementExecutor{
     }
 }
 
-public partial class Mob : Character, IEnvEnemy, IDamageable{
+// TODO
+// Fix the state machine export
+// Adding mob drops
+
+public partial class Mob : Character, IEnvEnemy, IDamageable, IVitriolic{
 
     [Signal]
     public delegate void PlayerKilledEventHandler();
@@ -64,10 +76,11 @@ public partial class Mob : Character, IEnvEnemy, IDamageable{
     [Signal]
     public delegate void EnemyDiedEventHandler();
 
-    private Heart heart;
-
     [Export]
     public Weapon Weapon{ get; set; }
+
+    [Export]
+    public Item MobItem{ get; set; }
 
     [Export]
     public int CollisionDamage{get; set;}
@@ -76,6 +89,20 @@ public partial class Mob : Character, IEnvEnemy, IDamageable{
     public int MaxHealth{get; set;} = 10;
 
     [Export]
+    public int InitialHealth{get; set;} = 9;
+
+    [Export]
+    public string Warcry{get; set;}
+
+    [Export]
+    public StateMachine stateMachine_{get;set;}
+
+    public StatePlayer statePlayer;
+
+    private Heart heart;
+
+    public Vitriol vitriol;
+
     public int Health{
         get{
             return heart.Health;
@@ -83,17 +110,19 @@ public partial class Mob : Character, IEnvEnemy, IDamageable{
         set{
             heart.Health = value;
         }}
-    [Export]
-    public string Warcry{get; set;}
-
-    [Export]
-    public StateMachine_Slime stateMachine_{get;set;} 
+    
+    //Adding a state manager - the thing that has a timer and is a node not a resource?
 
     public Dictionary<int, string> id_map;
     public Observer Target{get; set;}
 
     public int move; 
     public bool is_active = false;
+    public Node3D marker_source;
+
+    float attack_distance_max;
+    float attack_distance_min;
+    float sense_distance_max;
     
 
     public override void _Ready()
@@ -101,50 +130,76 @@ public partial class Mob : Character, IEnvEnemy, IDamageable{
         base._Ready();
         this.ArenaAlias = "Mob";
         Arena root = Character.GetRoot(this).GetNode("Arena") as Arena;
+        marker_source = root as Node3D;
         TargetObserver observer = new TargetObserver(this, root);
         heart = new Heart(this, MaxHealth);
+        Health = InitialHealth;
 		heart.Damaged += OnDamage;
 		heart.Died += OnDeath;
+        vitriol = new Vitriol(this, 20);
+        
+        //statePlayer = new StatePlayer();
+        //stateMachine_ ??= ResourceLoader.Load<StateMachine>("res://Bosses/StateMachines/state_machine_TestMob_Item.tres");
+        //stateMachine_ = statePlayer.AttachStateMachine(stateMachine_, Move);
+        //AddChild(statePlayer);
+        
         is_active = true;
-        stateMachine_ ??= new StateMachine_Slime();
 	}
 
     public override void _Process(double delta)
     {
         base._Process(delta);
-        
     }
 
     public override void _PhysicsProcess(double delta)
     {
         OnPreUpdate();
         base._PhysicsProcess(delta);
-        stateMachine_.OnUpdate();
         OnUpdate(delta);
     }
 
     public void OnPreUpdate(){
-        //var target = Target as TargetObserver;
-        stateMachine_.States[stateMachine_.ActiveState].Run();
-        //if(target.WorldArena == null){
-        //    GD.Print($" Character.GetRoot(this) { Character.GetRoot(this)}");
-		//	target.WorldArena = Character.GetRoot(this) as Arena;
-		//}
+        //this.Move("Idle");
+        //if(stateMachine_.HasState())stateMachine_.CurrentState.Run();
     }
 
     public override void OnUpdate(double delta){
-        // mobs have a simple action script
-        //
+        // Do not call the base function, it is already called by physics process
         base.OnUpdate(delta);
+        //GD.Print("On mob update");
         if(is_active){
+            //GD.Print("On active mob update");
             Target.OnUpdate();
-            stateMachine_.OnUpdate();
+            var observations = GetObservationDict();
+            //stateMachine_.OnUpdate(observations);
         }
     }
 
+    public Godot.Collections.Dictionary<string, Variant> GetObservationDict(){
+        var obs = new Godot.Collections.Dictionary<string, Variant>(); //NIT Can simplify initialization, however it may be more readable if each obs is added separately
+        // playing animation
+        obs.Add("playing_animation", this.animationPlayer.IsPlaying());
+        // in max attack distance
+        obs.Add("in_max_attack_dist", GetDistanceToTarget() < attack_distance_max);
+        // in min attack distance
+        obs.Add("in_min_attack_dist", GetDistanceToTarget() < attack_distance_min);
+        // Target visible
+        obs.Add("target_visible", GetDistanceToTarget() < sense_distance_max);
+        return obs;
+    }
+
+    public Vitriol GetVitriol(){
+        return vitriol;
+    }
+
+    public float GetDistanceToTarget(){
+        Vector3 position_target = GetTargetMarker().GlobalPosition;
+        Vector3 position_mob = FindMarker("Self").GlobalPosition;
+        float dist = position_target.DistanceTo(position_mob);
+        return dist;
+    }
+
     public override int GetCurrentMove(){
-        // TODO Rethink cooldown system
-        // TODO Calculate distance and direction properly.
         var target = GetTargetMarker(); 
         //Return the move ID for the character
         //if(cooldown)
@@ -153,9 +208,9 @@ public partial class Mob : Character, IEnvEnemy, IDamageable{
         }
         var distance = target.Position - this.Position; // convert to proper distance (pythagoras style)
         var direction = target.Position/this.Position;  // Also check if they share the same parent, or use global coords
-        float attack_distance_max = 5;  // Get this from Export variable or something
-        float attack_distance_min = 2;  // Min distance might trigger heavier attacks
-        float sense_distance_max = 10;  // Maximum sense distance
+        attack_distance_max = 5;  // Get this from Export variable or something
+        attack_distance_min = 2;  // Min distance might trigger heavier attacks
+        sense_distance_max = 10;  // Maximum sense distance
         float sense_sector = 1;         // Sector offset to check if target is in vision
         //if(distance<sense_distance_max && InsideSector(direction, sense_sector))
         {
@@ -193,9 +248,7 @@ public partial class Mob : Character, IEnvEnemy, IDamageable{
 
     public int MoveTowardsTarget(Marker3D target){
         // Look at target
-        
         // Add a bit of random noise to rotation
-        
         // Move forward && Jump
         return 0;
     }
@@ -204,11 +257,18 @@ public partial class Mob : Character, IEnvEnemy, IDamageable{
         return 0;
     }
 
-
-
     public override Marker3D FindMarker(string node_name){
         //Have a collision area and get marker from there;
-        return null;
+                // TODO add the arena to pick the marker
+        if(node_name == "Self"){
+			return this.GetNode<Marker3D>("Pivot/Character/Self");
+		}else if(node_name == "Item"){
+            return this.GetNode<Marker3D>("Pivot/Character/ItemMarker");
+        }else if(node_name == "Weapon"){
+            return this.GetNode<Marker3D>("Pivot/Character/WeaponMarker");
+        }
+        string marker_path_prefix = "";//"Skymove/";
+		return marker_source.GetNode<Marker3D>($"{marker_path_prefix}{node_name}");
     }
 
     public override void Execute(string executor, string order){
@@ -228,7 +288,7 @@ public partial class Mob : Character, IEnvEnemy, IDamageable{
 				"AnimationPlayer/Idle"
 			};
 			// load animations from Animation player
-			this.AddAnimationsToMoveKeys();
+			this.AddAnimationsToMoveKeys(keys);
 			// load shorthands from movement executor
 			// Currently hardcoded for testing movement executor
 			keys.Add("Movement/DeltaFWD");
@@ -253,7 +313,7 @@ public partial class Mob : Character, IEnvEnemy, IDamageable{
 
     //TODO add load id's override
 
-    public override Dictionary<string, string> LoadAliases(){ // TODO:  Refactor - modularise and generalize
+    public override Dictionary<string, string> LoadAliases(){ // TODO:  Refactor - modularize and generalize
         var godot_dict = FileHelper.LoadJsonAsDict("user://id_map.json");
 		if (godot_dict == null)
 		{
@@ -344,7 +404,9 @@ public partial class Mob : Character, IEnvEnemy, IDamageable{
         GD.Print($"Mob hit another character");
         if(collider is Player){
             var player_collider = collider as Player;
-            player_collider.OnDamage(CollisionDamage);
+            // This damages both (later I may change this so the one moving damages the other one, maybe)
+            this.OnDamage(player_collider.collision_damage);
+			player_collider.OnDamage(this.GetCollisionDamage());
         }else if (collider is Boss){
             var boss_collider = collider as Boss;
             this.OnDamage(boss_collider.CollisionDamage);
@@ -362,6 +424,9 @@ public partial class Mob : Character, IEnvEnemy, IDamageable{
 
     public void OnDeath(){ 
         EmitSignal(SignalName.EnemyDied);
+        vitriol.OnDeath();
+        DropItem();
+        Despawn();
     }
 
     public void OnPlayerKilled(){
@@ -380,11 +445,29 @@ public partial class Mob : Character, IEnvEnemy, IDamageable{
     public void OnDamage(int Damage){
         //Play OnDamage
         heart.OnDamage(Damage);
+        //State machine handle
         OnDamage();
+        if(Damage > 8 || heart.RelativeHealth < 10){ //Change magical constants OR move this to heart
+            OnCritical();
+            //stateMachine_.ChangeState("Evade"); //May need to call interrupt
+        }
+        else{
+            //stateMachine_.ChangeState("Stance"); //May need to call interrupt
+        }
     }
 
     public void OnDamage(){
         //Play OnDamage
+    }
+
+    public void OnCritical(){
+
+    }
+
+    public void DropItem(){
+        this.RemoveChild(MobItem);
+        MobItem.DropItem(FindMarker("Item"));
+        marker_source.AddChild(MobItem);
     }
 
 }
