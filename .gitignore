@@ -3,3 +3,5 @@ Assets/*
 .vscode/*
 project.godot
 .vscode/settings.json
+*.res
+*.old*
