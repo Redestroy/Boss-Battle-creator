@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MarkerInfoC" load_steps=2 format=3 uid="uid://di6ts4r24q2hf"]
+
+[ext_resource type="Script" uid="uid://dhf3h7slscacj" path="res://Arenas/MarkerInfoC.cs" id="1_yc4i1"]
+
+[resource]
+script = ExtResource("1_yc4i1")
+Name = "SpawnPlayer"
+NodeType = "Player"
+SpawnedNode = "Player"
+Px = 12.656
+Py = 8.679
+Pz = -8.359
+angle = Quaternion(0, 0.871008, 0, 0.491269)

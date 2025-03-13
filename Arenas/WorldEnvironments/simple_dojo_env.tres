@@ -1,0 +1,13 @@
+[gd_resource type="Environment" load_steps=4 format=3 uid="uid://r2mlrsc5vnxh"]
+
+[ext_resource type="Texture2D" uid="uid://b3oleu5jdjmet" path="res://Assets/Textures/beach_cloudy_bridge_4k.exr" id="1_xydw8"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_581jj"]
+panorama = ExtResource("1_xydw8")
+
+[sub_resource type="Sky" id="Sky_v072j"]
+sky_material = SubResource("PanoramaSkyMaterial_581jj")
+
+[resource]
+background_mode = 2
+sky = SubResource("Sky_v072j")

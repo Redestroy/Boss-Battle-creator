@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="ArenaInfo" load_steps=14 format=3 uid="uid://dwxl4wvs7antx"]
+
+[ext_resource type="Script" uid="uid://cp844utdkeyg1" path="res://Arenas/DoorInfo.cs" id="1_y0kvg"]
+[ext_resource type="Resource" uid="uid://d0unq4mtk0ys" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_Skymove.tres" id="2_nayjy"]
+[ext_resource type="Resource" uid="uid://di6ts4r24q2hf" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_SpawnPlayer.tres" id="2_rcygl"]
+[ext_resource type="Environment" uid="uid://dr3lr3naw4s7a" path="res://Arenas/WorldEnvironments/dojo_env_fireplace.tres" id="2_t3caf"]
+[ext_resource type="Resource" uid="uid://c2hk5ygxofpgp" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_SpawnEnemy.tres" id="3_q45oe"]
+[ext_resource type="Script" uid="uid://cxkv5mjtwg3bk" path="res://Arenas/ArenaInfo.cs" id="3_r4u1m"]
+[ext_resource type="Resource" uid="uid://b5wlee6611d3q" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_ReturnKeystone.tres" id="4_x36a0"]
+[ext_resource type="Resource" uid="uid://c83rvgkfcter3" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_EnemyKeystone.tres" id="5_1qva8"]
+[ext_resource type="Resource" uid="uid://c0di0n6405vkt" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_VictoryKeystone.tres" id="6_10tmv"]
+[ext_resource type="Resource" uid="uid://fmr6oucp1k3c" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_SpawnVictoryKeystone.tres" id="8_aglwr"]
+
+[sub_resource type="Resource" id="Resource_71t8b"]
+script = ExtResource("1_y0kvg")
+DoorName = "ReturnKeystone"
+scene_triggered = "res://Labyrinth.tscn"
+door_text = "Do you wish to flee?"
+
+[sub_resource type="Resource" id="Resource_go7q6"]
+script = ExtResource("1_y0kvg")
+DoorName = "EnemyKeystone"
+scene_triggered = "res://Labyrinth.tscn"
+door_text = "Death awaits, but whom..."
+
+[sub_resource type="Resource" id="Resource_isih3"]
+script = ExtResource("1_y0kvg")
+DoorName = "VictoryKeystone"
+scene_triggered = "res://Labyrinth.tscn"
+door_text = "Return to overworld?"
+
+[resource]
+script = ExtResource("3_r4u1m")
+arenaName = "Fireplace"
+WorldEnvironment = ExtResource("2_t3caf")
+SkymoveInfo = ExtResource("2_nayjy")
+SpawnMarkers = Array[Object]([ExtResource("2_rcygl"), ExtResource("3_q45oe"), ExtResource("4_x36a0"), ExtResource("5_1qva8"), ExtResource("6_10tmv"), ExtResource("8_aglwr")])
+NodeScenePaths = {
+"Keystone": "res://keystone.tscn"
+}
+DoorInfoDeck = Array[Object]([SubResource("Resource_71t8b"), SubResource("Resource_go7q6"), SubResource("Resource_isih3")])

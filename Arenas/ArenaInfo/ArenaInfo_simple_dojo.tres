@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="ArenaInfo" load_steps=14 format=3 uid="uid://0h05o3cphsgp"]
+
+[ext_resource type="Script" uid="uid://cp844utdkeyg1" path="res://Arenas/DoorInfo.cs" id="1_5wmo4"]
+[ext_resource type="Resource" uid="uid://d0unq4mtk0ys" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_Skymove.tres" id="2_g5gjs"]
+[ext_resource type="Resource" uid="uid://d3ct0hcelamsf" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_SpawnPlayer_simple.tres" id="3_hdw4a"]
+[ext_resource type="Resource" uid="uid://8f1le3m070r" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_SpawnEnemy_simple.tres" id="4_8fdea"]
+[ext_resource type="Resource" uid="uid://bivu0j7bwe28i" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_ReturnKeystone_simple.tres" id="5_bu1hj"]
+[ext_resource type="Resource" uid="uid://6ghqnfjfo6d4" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_EnemyKeystone_simple.tres" id="6_6vqah"]
+[ext_resource type="Resource" uid="uid://dhtjpeki88uw1" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_VictoryKeystone_simple.tres" id="7_y07xe"]
+[ext_resource type="Resource" uid="uid://t8xqqslbb6yf" path="res://Arenas/ArenaInfo/MarkerPresets/MarkerInfo_SpawnVictoryKeystone_simple.tres" id="8_6d4wb"]
+[ext_resource type="Environment" uid="uid://r2mlrsc5vnxh" path="res://Arenas/WorldEnvironments/simple_dojo_env.tres" id="9_awqv0"]
+[ext_resource type="Script" uid="uid://cxkv5mjtwg3bk" path="res://Arenas/ArenaInfo.cs" id="10_wk401"]
+
+[sub_resource type="Resource" id="Resource_emyf7"]
+script = ExtResource("1_5wmo4")
+DoorName = "ReturnKeystone"
+scene_triggered = "res://Labyrinth.tscn"
+door_text = "Do you wish to flee?"
+
+[sub_resource type="Resource" id="Resource_ibjpk"]
+script = ExtResource("1_5wmo4")
+DoorName = "EnemyKeystone"
+scene_triggered = "res://Labyrinth.tscn"
+door_text = "Death awaits, but whom..."
+
+[sub_resource type="Resource" id="Resource_e2ksq"]
+script = ExtResource("1_5wmo4")
+DoorName = "VictoryKeystone"
+scene_triggered = "res://Labyrinth.tscn"
+door_text = "Return to overworld?"
+
+[resource]
+script = ExtResource("10_wk401")
+arenaName = "TestHowel_Spikey"
+WorldEnvironment = ExtResource("9_awqv0")
+SkymoveInfo = ExtResource("2_g5gjs")
+SpawnMarkers = Array[Object]([ExtResource("3_hdw4a"), ExtResource("4_8fdea"), ExtResource("5_bu1hj"), ExtResource("6_6vqah"), ExtResource("7_y07xe"), ExtResource("8_6d4wb")])
+NodeScenePaths = {
+"Keystone": "res://keystone.tscn"
+}
+DoorInfoDeck = Array[Object]([SubResource("Resource_emyf7"), SubResource("Resource_ibjpk"), SubResource("Resource_e2ksq")])

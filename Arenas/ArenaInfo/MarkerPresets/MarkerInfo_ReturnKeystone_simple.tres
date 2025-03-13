@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MarkerInfoC" load_steps=2 format=3 uid="uid://bivu0j7bwe28i"]
+
+[ext_resource type="Script" uid="uid://dhf3h7slscacj" path="res://Arenas/MarkerInfoC.cs" id="1_q3ymq"]
+
+[resource]
+script = ExtResource("1_q3ymq")
+Name = "ReturnKeystone"
+NodeType = "Door"
+SpawnedNode = "Keystone"
+Px = -6.681
+Py = 0.177
+Pz = -1.155
+angle = Quaternion(0, 7.4506e-09, 0, 1)

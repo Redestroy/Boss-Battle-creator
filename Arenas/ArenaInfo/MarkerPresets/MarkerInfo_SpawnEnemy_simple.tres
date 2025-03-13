@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MarkerInfoC" load_steps=2 format=3 uid="uid://8f1le3m070r"]
+
+[ext_resource type="Script" uid="uid://dhf3h7slscacj" path="res://Arenas/MarkerInfoC.cs" id="1_8loca"]
+
+[resource]
+script = ExtResource("1_8loca")
+Name = "SpawnEnemy"
+NodeType = "Enemy"
+SpawnedNode = "Enemy"
+Px = 2.282
+Py = 2.088
+Pz = 0.0
+angle = Quaternion(0, 0.871008, 0, 0.491269)

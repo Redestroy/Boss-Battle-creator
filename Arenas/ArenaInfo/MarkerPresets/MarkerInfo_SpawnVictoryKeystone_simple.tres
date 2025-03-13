@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MarkerInfoC" load_steps=2 format=3 uid="uid://t8xqqslbb6yf"]
+
+[ext_resource type="Script" uid="uid://dhf3h7slscacj" path="res://Arenas/MarkerInfoC.cs" id="1_q3a7k"]
+
+[resource]
+script = ExtResource("1_q3a7k")
+Name = "SpawnVictoryDoor"
+NodeType = "Marker"
+SpawnedNode = "Marker"
+Px = 0.0
+Py = 0.0
+Pz = 0.0
+angle = Quaternion(0, 0, 0, 1)
