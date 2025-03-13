@@ -1,14 +1,14 @@
 [gd_resource type="Resource" script_class="StateMachine" load_steps=8 format=3 uid="uid://r5brcqovx8l2"]
 
-[ext_resource type="Script" path="res://Bosses/StateMachines/SlimeState_Idle.cs" id="1_orecn"]
-[ext_resource type="Script" path="res://Bosses/StateMachines/GodotStringPair.cs" id="2_w1e0i"]
-[ext_resource type="Script" path="res://Bosses/StateMachines/GodotStringGraph.cs" id="3_1pvw5"]
-[ext_resource type="Script" path="res://Bosses/StateMachines/StateMachine.cs" id="4_wc4ue"]
+[ext_resource type="Script" uid="uid://doc2mffhhltl1" path="res://Bosses/StateMachines/SlimeState_Idle.cs" id="1_orecn"]
+[ext_resource type="Script" uid="uid://7161el3h85ty" path="res://Bosses/StateMachines/GodotStringPair.cs" id="2_w1e0i"]
+[ext_resource type="Script" uid="uid://dfapr003hhwoi" path="res://Bosses/StateMachines/GodotStringGraph.cs" id="3_1pvw5"]
+[ext_resource type="Script" uid="uid://bpgba7xwlu0s0" path="res://Bosses/StateMachines/StateMachine.cs" id="4_wc4ue"]
 
 [sub_resource type="Resource" id="Resource_b0oxv"]
 script = ExtResource("1_orecn")
-StateTag = null
-move = null
+StateTag = "Idle"
+move = "Idle"
 Timeout = 4.0
 next_state_on_timeout = "Idle"
 
