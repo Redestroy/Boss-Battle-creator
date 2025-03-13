@@ -1,21 +1,23 @@
-[gd_scene load_steps=5 format=3 uid="uid://gvkw8kadhsux"]
+[gd_scene load_steps=6 format=3 uid="uid://gvkw8kadhsux"]
 
-[ext_resource type="Script" path="res://HUD.cs" id="1_1584f"]
+[ext_resource type="Script" uid="uid://b6wwce52wn8i8" path="res://HUD.cs" id="1_1584f"]
 [ext_resource type="Texture2D" uid="uid://b6euvhxg6cxme" path="res://Assets/Paint/Under.png" id="1_oymuf"]
 [ext_resource type="Texture2D" uid="uid://bvk0j5rehtlg2" path="res://Assets/Paint/Over.png" id="2_xuih0"]
 [ext_resource type="Texture2D" uid="uid://dherfxuqn3hp2" path="res://Assets/Paint/LifeBarProgress.png" id="3_o01ym"]
+[ext_resource type="PackedScene" uid="uid://cuvttxljusuuu" path="res://UI/move_deck_display.tscn" id="5_db5tv"]
 
 [node name="HUD" type="Control"]
 layout_mode = 3
 anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_right = 220.0
+offset_bottom = 150.0
 script = ExtResource("1_1584f")
 
 [node name="AspectRatioContainer" type="AspectRatioContainer" parent="."]
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
+stretch_mode = 3
 
 [node name="cHUD" type="Control" parent="AspectRatioContainer"]
 unique_name_in_owner = true
@@ -106,14 +108,23 @@ current_tab = 0
 
 [node name="ItemList" type="ItemList" parent="AspectRatioContainer/cHUD/TabContainer"]
 layout_mode = 2
-item_count = 1
-item_0/text = "Item list"
-item_0/selectable = false
 metadata/_tab_index = 0
 
-[node name="EquipList" type="ItemList" parent="AspectRatioContainer/cHUD/TabContainer"]
+[node name="MoveList" type="ItemList" parent="AspectRatioContainer/cHUD/TabContainer"]
 visible = false
 layout_mode = 2
 metadata/_tab_index = 1
+
+[node name="EquipTree" type="Tree" parent="AspectRatioContainer/cHUD/TabContainer"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="MoveDeckDisplay" parent="AspectRatioContainer/cHUD" instance=ExtResource("5_db5tv")]
+layout_mode = 1
+offset_left = 222.0
+offset_top = 3.0
+offset_right = 908.0
+offset_bottom = 46.0
 
 [connection signal="timeout" from="AspectRatioContainer/cHUD/HelpTimer" to="." method="_on_help_timer_timeout"]

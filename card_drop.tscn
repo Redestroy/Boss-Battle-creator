@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://bbh8if3xomoqk"]
+
+[ext_resource type="Script" uid="uid://hx3l6pk61gxc" path="res://Item.cs" id="1_x38yb"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_0cxyo"]
+radius = 0.3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_iypcb"]
+albedo_color = Color(0.961763, 0.9488, 0, 1)
+metallic = 1.0
+metallic_specular = 0.79
+
+[sub_resource type="BoxMesh" id="BoxMesh_hmkn5"]
+material = SubResource("StandardMaterial3D_iypcb")
+size = Vector3(0.1, 0.6, 0.35)
+
+[node name="CardDrop" type="Node3D"]
+script = ExtResource("1_x38yb")
+node_path = "res://Weapons/Moves/Move_QuickAttack.tscn"
+PickupType = "Move"
+
+[node name="Area3D" type="Area3D" parent="."]
+collision_layer = 128
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+shape = SubResource("SphereShape3D_0cxyo")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Area3D"]
+mesh = SubResource("BoxMesh_hmkn5")
+skeleton = NodePath("../..")

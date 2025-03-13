@@ -1,0 +1,60 @@
+[gd_scene load_steps=8 format=3 uid="uid://dv4iybx3h6636"]
+
+[ext_resource type="PackedScene" uid="uid://dpf1uemx8po85" path="res://Weapons/WeaponChakram.tscn" id="1_fpkf0"]
+[ext_resource type="Script" uid="uid://tuivupabj6v1" path="res://Mob.cs" id="1_ho8pj"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_px4dw"]
+albedo_color = Color(0.43134, 0.43134, 0.43134, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_1tl5d"]
+material = SubResource("StandardMaterial3D_px4dw")
+radius = 0.3
+height = 1.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_ljxa6"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_1l7w4"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vejey"]
+
+[node name="TestMob_Spikey" type="CharacterBody3D" node_paths=PackedStringArray("Weapon")]
+collision_layer = 8
+collision_mask = 1782
+script = ExtResource("1_ho8pj")
+Weapon = NodePath("Pivot/WeaponMarker/WeaponChakram")
+CollisionDamage = 25
+MaxHealth = 50
+InitialHealth = 50
+Warcry = "*Stands ominously*"
+
+[node name="Pivot" type="Node3D" parent="."]
+
+[node name="Character" type="Node3D" parent="Pivot"]
+
+[node name="Self" type="Marker3D" parent="Pivot/Character"]
+
+[node name="ItemMarker" type="Marker3D" parent="Pivot/Character"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.292668, 0.137979, -0.688248)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Pivot/Character"]
+transform = Transform3D(0.80762, -0.589704, 0, 0.589704, 0.80762, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CapsuleMesh_1tl5d")
+skeleton = NodePath("../..")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Pivot/Character"]
+transform = Transform3D(-0.0118401, 0.362618, 0.35579, -0.29203, -0.296067, 0.29203, 0.415689, -0.197665, 0.215292, 0, 0, 0)
+mesh = SubResource("BoxMesh_ljxa6")
+
+[node name="WeaponMarker" type="Marker3D" parent="Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.753076)
+
+[node name="WeaponChakram" parent="Pivot/WeaponMarker" instance=ExtResource("1_fpkf0")]
+transform = Transform3D(0.0631434, 0.0764462, -0.0129958, 0, -0.0167595, -0.0985856, -0.0775429, 0.0622503, -0.0105825, -0.0258223, 0, -0.0125046)
+collision_layer = 256
+collision_mask = 242
+physics_material_override = SubResource("PhysicsMaterial_1l7w4")
+Damage = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.352982, 0.354083, -0.00540418, -0.28891, 0.283533, -0.293496, -0.204779, 0.210321, 0.40476, 0, 0, 0)
+shape = SubResource("BoxShape3D_vejey")

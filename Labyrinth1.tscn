@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://dvuj1aooa8qld"]
+[gd_scene load_steps=12 format=3 uid="uid://dvuj1aooa8qld"]
 
 [ext_resource type="MeshLibrary" uid="uid://dw1uolnxmupql" path="res://Assets/Meshes/MeshLibrary.tres" id="1_10csn"]
 [ext_resource type="PackedScene" uid="uid://7lgd033g0ab" path="res://PlayerGeneric.tscn" id="1_h0s04"]
@@ -6,6 +6,7 @@
 [ext_resource type="MeshLibrary" uid="uid://dq2ct832sw7ga" path="res://Assets/Meshes/Libs/overworld3.tres" id="4_ny6n7"]
 [ext_resource type="PackedScene" uid="uid://weqomdw8vilo" path="res://TestMob_Item.tscn" id="5_86d2o"]
 [ext_resource type="PackedScene" uid="uid://coict4ed7fjv7" path="res://item.tscn" id="6_jkmbp"]
+[ext_resource type="PackedScene" uid="uid://bbh8if3xomoqk" path="res://card_drop.tscn" id="7_sxw0n"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_m51ek"]
 
@@ -85,4 +86,8 @@ on_ground = true
 [node name="Item" parent="Skymove" instance=ExtResource("6_jkmbp")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.725236, 0.313137, 0)
 node_path = "res://Weapons/WeaponChakram.tscn"
+on_ground = true
+
+[node name="CardDrop" parent="." instance=ExtResource("7_sxw0n")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.04058, 0, 0)
 on_ground = true

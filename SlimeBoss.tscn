@@ -1,6 +1,6 @@
 [gd_scene load_steps=9 format=3 uid="uid://cjewdxmkvfj2d"]
 
-[ext_resource type="Script" path="res://GJscripts/SlimeBoss.cs" id="1_7mtn4"]
+[ext_resource type="Script" uid="uid://b03k1oisd4b3b" path="res://GJscripts/SlimeBoss.cs" id="1_7mtn4"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_mso6l"]
 
@@ -74,9 +74,9 @@ tracks/0/keys = PackedFloat32Array(0, 1, 0, 0, 0, 1, 0.3, 1, 0, -0.289, 0, 0.957
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_h5qgp"]
 _data = {
-"Jiggle": SubResource("Animation_kd7mr"),
-"Recoil": SubResource("Animation_pgkvp"),
-"Shrug": SubResource("Animation_wkna4")
+&"Jiggle": SubResource("Animation_kd7mr"),
+&"Recoil": SubResource("Animation_pgkvp"),
+&"Shrug": SubResource("Animation_wkna4")
 }
 
 [node name="Slime" type="CharacterBody3D"]

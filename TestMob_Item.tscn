@@ -1,19 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://weqomdw8vilo"]
+[gd_scene load_steps=8 format=3 uid="uid://weqomdw8vilo"]
 
-[ext_resource type="Script" path="res://Mob.cs" id="1_wuidf"]
+[ext_resource type="Script" uid="uid://tuivupabj6v1" path="res://Mob.cs" id="1_wuidf"]
 [ext_resource type="Resource" uid="uid://r5brcqovx8l2" path="res://Bosses/StateMachines/state_machine_TestMob_Item.tres" id="2_n127h"]
 [ext_resource type="PackedScene" uid="uid://dpf1uemx8po85" path="res://Weapons/WeaponChakram.tscn" id="2_wmqrp"]
 [ext_resource type="PackedScene" uid="uid://coict4ed7fjv7" path="res://item.tscn" id="3_nge20"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mjrk5"]
-transparency = 1
-albedo_color = Color(0.996078, 0.490196, 1, 0.356863)
-metallic = 0.5
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_5gb26"]
-material = SubResource("StandardMaterial3D_mjrk5")
-radius = 0.3
-height = 1.0
+[ext_resource type="ArrayMesh" uid="uid://dv6nhjgjkx5xm" path="res://Assets/Meshes/Blender/Bean1_clear.obj" id="4_p4ygk"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_gthv5"]
 
@@ -40,7 +31,7 @@ scene_path = "res://TestMob_Item.tscn"
 ArenaAlias = "TestMob_Item"
 
 [node name="Item" parent="." instance=ExtResource("3_nge20")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1)
+transform = Transform3D(0.566668, 0.723765, 0.393765, -0.787376, 0.616473, 0, -0.242746, -0.310042, 0.919211, 0.0779276, 0, -0.255154)
 node_path = "res://Weapons/WeaponChakram.tscn"
 
 [node name="Pivot" type="Node3D" parent="."]
@@ -50,15 +41,15 @@ node_path = "res://Weapons/WeaponChakram.tscn"
 [node name="Self" type="Marker3D" parent="Pivot/Character"]
 
 [node name="ItemMarker" type="Marker3D" parent="Pivot/Character"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.292668, 0.137979, -0.688248)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.247828, 0.0100237, -0.734161)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Pivot/Character"]
-transform = Transform3D(0.80762, -0.589704, 0, 0.589704, 0.80762, 0, 0, 0, 1, 0, 0, 0)
-mesh = SubResource("CapsuleMesh_5gb26")
+transform = Transform3D(1.3209, -2.69355, 0, 2.69355, 1.3209, 0, 0, 0, 3, 0, 0, 0)
+mesh = ExtResource("4_p4ygk")
 skeleton = NodePath("../..")
 
 [node name="WeaponMarker" type="Marker3D" parent="Pivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.753076)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.231481, 0.170946, -0.366439)
 
 [node name="WeaponChakram" parent="Pivot/WeaponMarker" instance=ExtResource("2_wmqrp")]
 transform = Transform3D(0.0631434, 0.0764462, -0.0129958, 0, -0.0167595, -0.0985856, -0.0775429, 0.0622503, -0.0105825, -0.0258223, 0, -0.0125046)
@@ -68,5 +59,5 @@ physics_material_override = SubResource("PhysicsMaterial_gthv5")
 Damage = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.924317, -0.819013, 0.200786, 0.748669, 0.934122, 0.363827, -0.388063, -0.148634, 1.18016, 0, 0, 0)
+transform = Transform3D(0.469666, -1.15966, 0.00838427, 1.09283, 0.445605, 0.415469, -0.388063, -0.148634, 1.18016, 0, 0, 0)
 shape = SubResource("CapsuleShape3D_6sv3f")

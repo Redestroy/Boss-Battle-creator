@@ -1,11 +1,23 @@
-[gd_scene load_steps=12 format=3 uid="uid://dpf1uemx8po85"]
+[gd_scene load_steps=14 format=3 uid="uid://dpf1uemx8po85"]
 
-[ext_resource type="Script" path="res://Weapons/WeaponChakram.cs" id="1_48ru8"]
+[ext_resource type="Script" uid="uid://c5s644oa6k1e4" path="res://Weapons/WeaponChakram.cs" id="1_48ru8"]
 [ext_resource type="PackedScene" uid="uid://dq8q06dccuv3b" path="res://Assets/Chakram.blend" id="1_ij000"]
+[ext_resource type="Script" uid="uid://chnfc276oxnju" path="res://Equipment/EquippableInfo.cs" id="2_sewfj"]
 [ext_resource type="PackedScene" uid="uid://dgmrt605n406" path="res://Weapons/Moves/Move_UI.tscn" id="3_hgcpp"]
 [ext_resource type="Texture2D" uid="uid://drtso25av2cd3" path="res://icon.svg" id="4_qk6hr"]
-[ext_resource type="Script" path="res://Weapons/Moves/MoveInfo.cs" id="5_us6q3"]
+[ext_resource type="Script" uid="uid://by8kbtavugiod" path="res://Weapons/Moves/MoveInfo.cs" id="5_us6q3"]
 [ext_resource type="Texture2D" uid="uid://xbvucluux8mf" path="res://Assets/Paint/Card_ChakramLMB.png" id="6_pys34"]
+
+[sub_resource type="Resource" id="Resource_rhpb4"]
+script = ExtResource("2_sewfj")
+Display_label = "WeaponChakram"
+Alias_label = "WeaponChakram"
+EquippableDescription = "Simple but dangerous, chakram is a whirlwind of destruction in the right hands."
+EquippableType = "Weapon"
+number_of_slots = 4
+slots = Array[Object]([])
+slot_names = null
+metadata/_custom_type_script = "uid://chnfc276oxnju"
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_7dnui"]
 height = 0.3
@@ -16,6 +28,8 @@ script = ExtResource("5_us6q3")
 Input_label = "LMB"
 Alias_label = "QuickAttack"
 MoveDescription = "LActionExtend"
+EquippableSlot = ""
+EquippableType = ""
 Cooldown = 1.0
 Card_image = ExtResource("4_qk6hr")
 
@@ -24,6 +38,8 @@ script = ExtResource("5_us6q3")
 Input_label = "RMB"
 Alias_label = "HeavyAttack"
 MoveDescription = "RActionSpin"
+EquippableSlot = ""
+EquippableType = ""
 Cooldown = 3.0
 Card_image = ExtResource("6_pys34")
 
@@ -32,6 +48,8 @@ script = ExtResource("5_us6q3")
 Input_label = "ABILITY"
 Alias_label = "Ability"
 MoveDescription = "AbilityExpand"
+EquippableSlot = ""
+EquippableType = ""
 Cooldown = 1.0
 Card_image = ExtResource("4_qk6hr")
 
@@ -40,12 +58,15 @@ script = ExtResource("5_us6q3")
 Input_label = "ULT"
 Alias_label = "UltimateMove"
 MoveDescription = "BloodCleave"
+EquippableSlot = ""
+EquippableType = ""
 Cooldown = 20.0
 Card_image = ExtResource("4_qk6hr")
 
 [node name="WeaponChakram" type="AnimatableBody3D"]
 sync_to_physics = false
 script = ExtResource("1_48ru8")
+equippableInfo = SubResource("Resource_rhpb4")
 
 [node name="Chakram" parent="." instance=ExtResource("1_ij000")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.130473, 0)

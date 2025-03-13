@@ -1,18 +1,9 @@
-[gd_scene load_steps=9 format=3 uid="uid://csbv8f2ccs7cf"]
+[gd_scene load_steps=7 format=3 uid="uid://csbv8f2ccs7cf"]
 
 [ext_resource type="MeshLibrary" uid="uid://dq2ct832sw7ga" path="res://Assets/Meshes/Libs/overworld3.tres" id="1_1fdfx"]
-[ext_resource type="Script" path="res://Dojo.cs" id="1_4rk1k"]
-[ext_resource type="Texture2D" uid="uid://cxr57fm2jvpo0" path="res://Assets/Textures/pexels-pixabay-73873.jpg" id="3_48nkj"]
-
-[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_svuu3"]
-panorama = ExtResource("3_48nkj")
-
-[sub_resource type="Sky" id="Sky_xccwm"]
-sky_material = SubResource("PanoramaSkyMaterial_svuu3")
-
-[sub_resource type="Environment" id="Environment_ryiu4"]
-background_mode = 2
-sky = SubResource("Sky_xccwm")
+[ext_resource type="Script" uid="uid://cnu87b0we2qm3" path="res://Dojo.cs" id="1_4rk1k"]
+[ext_resource type="Resource" uid="uid://u1x5toi40dmx" path="res://Arenas/ArenaInfo/ArenaInfo_simple_dojo2.tres" id="2_81vr1"]
+[ext_resource type="Environment" uid="uid://dr3lr3naw4s7a" path="res://Arenas/WorldEnvironments/dojo_env_fireplace.tres" id="3_fts0h"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_xjxu4"]
 
@@ -22,12 +13,14 @@ radius = 50.0
 
 [node name="Arena" type="Node3D"]
 script = ExtResource("1_4rk1k")
+arenaInfo = ExtResource("2_81vr1")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_ryiu4")
+environment = ExtResource("3_fts0h")
 
 [node name="Skymove" type="Marker3D" parent="."]
 transform = Transform3D(0.254281, 0, -0.96713, 0, 1, 0, 0.96713, 0, 0.254281, 0, -3, 0)
+rotation_edit_mode = 1
 
 [node name="GridMap" type="GridMap" parent="Skymove" groups=["StoredGroup"]]
 transform = Transform3D(-0.51731, 0, 0.855798, 0, 1, 0, -0.855798, 0, -0.51731, 0, 0, 0)
@@ -40,24 +33,30 @@ data = {
 
 [node name="SpawnPlayer" type="Marker3D" parent="Skymove" groups=["StoredGroup"]]
 transform = Transform3D(-0.51731, 0, 0.855798, 0, 1, 0, -0.855798, 0, -0.51731, 12.6555, 8.67892, -8.35875)
+rotation_edit_mode = 1
 
 [node name="SpawnEnemy" type="Marker3D" parent="Skymove" groups=["StoredGroup"]]
 transform = Transform3D(-0.51731, 0, 0.855798, 0, 1, 0, -0.855798, 0, -0.51731, -13.3633, 4.42009, 6.95879)
+rotation_edit_mode = 1
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="Skymove" groups=["StoredGroup"]]
 transform = Transform3D(-0.51731, 0, 0.855798, 0, 1, 0, -0.855798, 0, -0.51731, 0, 19.5932, 0)
 
 [node name="ReturnKeystone" type="Marker3D" parent="Skymove"]
 transform = Transform3D(1, 0, 1.49012e-08, 0, 1, 0, -1.49012e-08, 0, 1, 13.3712, 1.32732, -6.91686)
+rotation_edit_mode = 1
 
 [node name="EnemyKeystone" type="Marker3D" parent="Skymove"]
 transform = Transform3D(1, 0, 1.49012e-08, 0, 1, 0, -1.49012e-08, 0, 1, -12.3037, 1.33778, 8.60587)
+rotation_edit_mode = 1
 
 [node name="VictoryKeystone" type="Marker3D" parent="Skymove"]
 transform = Transform3D(1, 0, 1.49012e-08, 0, 1, 0, -1.49012e-08, 0, 1, 0, -0.845321, 0)
+rotation_edit_mode = 1
 
 [node name="SpawnVictoryDoor" type="Marker3D" parent="Skymove"]
 transform = Transform3D(1, 0, 1.49012e-08, 0, 1, 0, -1.49012e-08, 0, 1, 0, 1.42318, 0)
+rotation_edit_mode = 1
 
 [node name="Boundary" type="Area3D" parent="."]
 unique_name_in_owner = true

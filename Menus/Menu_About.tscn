@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://dp55lxv3mc5vr"]
 
-[ext_resource type="Script" path="res://Menus/Menu_About.cs" id="1_mlmla"]
+[ext_resource type="Script" uid="uid://d13npm1iqqxyd" path="res://Menus/Menu_About.cs" id="1_mlmla"]
 [ext_resource type="Texture2D" uid="uid://ceqp1ycnoujvs" path="res://Assets/Menus/TextImg/About.png" id="2_a6fov"]
 
 [node name="Control" type="Control"]
