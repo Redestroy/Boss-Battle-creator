@@ -345,6 +345,11 @@ public class MovementExecutor
 
 public abstract partial class Character : CharacterBody3D, IArenaObject
 {
+    [Signal]
+	public delegate void SigSlotItemEventHandler(string item_key);
+	[Signal]
+	public delegate void SigDeSlotItemEventHandler(string item_key);
+
     [Export]
     public float Speed = 5.0f;
 
@@ -376,12 +381,22 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
     public AnimationPlayer animationPlayer; // Maybe add methods instead of making public?
     private MovementExecutor movementExecutor;
     Dictionary<string, Animation> animation_deck;
+    
+    public Dictionary<string, Equippable> item_instances = new Dictionary<string, Equippable>();
+    public Inventory inventory = new Inventory();
+    //public Dictionary<string, Equippable> equipment;
+    //public Dictionary<string, Equippable> move_attachment_to_equipment;
+
     Dictionary<string, Move> move_deck;
-    public Dictionary<int, Tuple<string, PackedScene>> inventory;
     List<string> move_keys;
     Dictionary<string, string> move_deck_aliases;
-    public Dictionary<int, string> move_deck_ids;
-    private Dictionary<string, bool> move_mask;
+    public Dictionary<int, string> move_deck_ids = new Dictionary<int, string>();
+    private Dictionary<string, bool> move_mask = new Dictionary<string, bool>();
+
+    // Reference to access items by index
+
+    public Dictionary<int, Tuple<string, PackedScene>> inventory_ref_ = new Dictionary<int, Tuple<string, PackedScene>>();
+    public Dictionary<int, Tuple<string, PackedScene>> move_inventory_ref_ = new Dictionary<int, Tuple<string, PackedScene>>();
 
     private Weapon weapon;
     //private Item item;
@@ -395,7 +410,7 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
 
     public override void _Ready()
     {
-
+        
         base._Ready();
         animationPlayer = GetNodeOrNull<AnimationPlayer>("AnimationPlayer");
         if (animationPlayer == null)
@@ -406,12 +421,15 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
         movementExecutor.Init(Velocity, Transform, Speed, JumpVelocity, FlySpeed, JumpImpulse, FallAcceleration);
         // Load animations
         // animation_deck = LoadAnimations("file_name");
+        
+        //Inventory
+        this.AddChild(inventory);
+        LoadInventory();
+        var global_inv = (GlobalInventory) GetNode("/root/GlobalInventory");
+        global_inv.CopyInventory(this.Name, inventory);
         move_keys = LoadMoveKeys();
-        move_mask = new Dictionary<string, bool>();
         move_deck_aliases = LoadAliases();
-        move_deck_ids = new Dictionary<int, string>();
         LoadIds(move_deck_aliases);
-        inventory = new Dictionary<int, Tuple<string, PackedScene>>();
         last_delta = 0.0;
         // Hardcoded deck should be replaced, but may exist in End chars until saving and loading is done
         // Slime example
@@ -618,6 +636,31 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
         }
     }
 
+    public virtual Inventory LoadInventory(){
+        // Load inventory from database if entry exists, otherwise create an empty inventory
+        var global_inv = (GlobalInventory) GetNode("/root/GlobalInventory");
+        var inventory = global_inv.LoadInventory(this.Name) ?? new Inventory();
+        LoadInvRefFromDict(inventory.GetItemRef());
+        LoadMoveRefFromDict(inventory.GetMoveRef());
+        return inventory;
+        // Override for mob, boss and player separately, as there are different ways to load it for each one. 
+        // Can make a static loader function to load the inventory from the database based on key 
+    }
+
+    public void LoadInvRefFromDict(Dictionary<int, Tuple<string, string>> paths){
+        foreach(var item in paths){
+            var packed_scene = ResourceLoader.Load<PackedScene>(item.Value.Item2);
+            inventory_ref_.Add(item.Key, new Tuple<string, PackedScene>(item.Value.Item1, packed_scene));
+        }
+    }
+
+    public void LoadMoveRefFromDict(Dictionary<int, Tuple<string, string>> paths){
+        foreach(var item in paths){
+            var packed_scene = ResourceLoader.Load<PackedScene>(item.Value.Item2);
+            move_inventory_ref_.Add(item.Key, new Tuple<string, PackedScene>(item.Value.Item1, packed_scene));
+        }
+    }
+
     public List<string> GetMoveKeys()
     {
         //Currently using move keys from a separate list
@@ -765,55 +808,91 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
     // Item functions for slots
     // General
     public PackedScene LoadItemScene(int idx){
-        return inventory[idx].Item2;
+        return inventory_ref_[idx].Item2;
     }
+
+    public PackedScene LoadMoveScene(int idx){
+        return move_inventory_ref_[idx].Item2;
+    }
+
     public PackedScene LoadItemScene(string node_path)
     {
-        return ResourceLoader.Load<PackedScene>(node_path);
+        return ResourceLoader.Load<PackedScene>(node_path); //TODO: replace with dict reference to invref
     }
+
+    
     public void SlotItem(int idx, string item_string)
     {
-        string item_type = GetTypeFromItemString(item_string);
-        switch (item_type)
-        {
-            case "Weapon":
-                SlotWeapon(idx, item_string);
-                break;
-            case "Item":
-                GD.Print("Slot Item");
-                //SlotPassive();
-                break;
-            case "Body":
-                GD.Print("Slot Cloak");
-                //SlotBody();
-                break;
-            default:
-                GD.Print("Item is not slottable");
-                break;
+        item_instances[item_string] = LoadItemScene(idx).Instantiate() as Equippable;
+        SlotEquippable(item_instances[item_string]);
+        EmitSignal(SignalName.SigSlotItem, item_string);
+    }
+
+    public void ReinstanceEquipment(){
+        foreach(var eqquipable in inventory.equipment){
+            item_instances[eqquipable.Value.Display_label] = LoadItemScene(eqquipable.Value.ItemPath).Instantiate() as Equippable;
+            InstanceEquippable(item_instances[eqquipable.Value.Display_label]);
         }
     }
 
-    public void DeSlotItem(int idx, string item_string)
-    {
-        string item_type = GetTypeFromItemString(item_string);
-        switch (item_type)
-        {
-            case "Weapon":
-                GD.Print("DeSlot wep");
-                DeSlotWeapon(idx, item_string);
-                break;
-            case "Item":
-                GD.Print($"DeSlot Item{item_string}");
-                //SlotPassive();
-                break;
-            case "Body":
-                GD.Print("DeSlot Cloak");
-                //SlotBody();
-                break;
-            default:
-                GD.Print("Item is not deslottable");
-                break;
+    public void InstanceEquippable(Equippable equippable){
+        this.SetPhysicsProcess(false);
+        uint layer = 7;
+        uint mask = 0b00000000_00000000_00000001_10111100;
+        equippable.Scale = equippable.Scale*0.1f;
+        equippable.SetCollisionsTo(layer, mask);
+        equippable.TeleportTo(FindMarker(equippable.GetMarkerTag())); //weapon.Transform = FindMarker("Weapon").GlobalTransform; //Teleport weapon to its spot (check if collisions cause problems)
+        GetNode<Node3D>(equippable.GetParentNodeTag()).AddChild(equippable);
+        this.SetPhysicsProcess(true);
+    }
+
+    public void SlotEquippable(Equippable equippable){
+        GD.Print($"Slotting item {equippable}");
+        if (equippable.IsEquipped) return; // Might have errors, for switching weapons, hiding might work better
+        inventory.Slot(equippable);
+
+        // Separate into a different function
+        InstanceEquippable(equippable);
+        // Load all moves
+        // Separate into a different function
+
+        //var move_deck_equippable = equippable.moveInfos;
+        //foreach (var moveInfo in move_deck_equippable)
+        //{
+        //    move_deck_aliases.Add(moveInfo.Alias_label, $"AnimationPlayer/{moveInfo.MoveDescription}"); //weapon.GetAttackAnimation(move_el.moveInfo.Input_label)
+        //    CheckEnabledMoves(moveInfo.Alias_label);
+        //}
+    }
+
+    public void SlotMove(int idx, string item_string){
+        // add move to move deck
+        var move = LoadMoveScene(idx).Instantiate() as MoveUi;
+        if(inventory.equipment.TryGetValue(move.moveInfo.EquippableType, out EquippableInfo item)){
+            item_instances[item.Display_label].AddMove(move);
+            inventory.SlotMoveOnEquippable(move.moveInfo, item);
         }
+    }
+
+    public void DeSlotItem(string item_string)
+    {
+        DeSlotEquippable(inventory.GetEquippableByName(item_string));
+        EmitSignal(SignalName.SigDeSlotItem, item_string);
+    }
+
+    public void DeSlotEquippable(EquippableInfo item){
+        //GetNode<Node3D>(item.GetParentNodeTag()).RemoveChild(item);
+        if(item != null){
+            inventory.DeSlot(item);
+            item_instances[item.Display_label].Stow();
+            item_instances.Remove(item.Display_label);
+        }
+    }
+
+    public void DeSlotMove(string item_string){
+        // Remove move from weapon
+        item_instances[inventory.GetEquippableNameForMoveByAttachment(item_string)].RemoveMoveByName(item_string);
+        // Remove move from move deck
+        inventory.RemoveMoveFromItem(item_string);
     }
 
     public string GetTypeFromItemString(string item_string){
@@ -828,46 +907,6 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
             }
         }
         return "no equip";
-    }
-    // Weapon
-    public Weapon LoadWeapon(string node_path)
-    {
-        var weapon_node = LoadItemScene(node_path);
-        //loaded_scenes.Add(weapon_node.Name, weapon_node);
-        //this.SetWeapon();
-        return weapon_node.Instantiate() as Weapon;
-    }
-
-    public Weapon LoadWeapon(int idx)
-    {
-        var weapon_node = LoadItemScene(idx);
-        //loaded_scenes.Add(weapon_node.Name, weapon_node);
-        //this.SetWeapon();
-        return weapon_node.Instantiate() as Weapon;
-    }
-
-    public void SlotWeapon(int idx, string weapon_key)
-    {
-        GD.Print($"Slotting weapon {weapon_key}");
-        if (weapon != null) DeSlotWeapon(idx, weapon_key); // Might have errors, for switching weapons, hiding might work better
-        //weapon = LoadWeapon($"res://{weapon_key}.tscn"); //TODO separate load as earlier (preload) and Slot as just instantiation
-        weapon = LoadWeapon(idx);
-        //TODO set collision layer and collision mask
-        //TODO rescale weapon
-        weapon.Transform = FindMarker("Weapon").GlobalTransform; //Teleport weapon to its spot (check if collisions cause problems)
-        GetNode<Node3D>("Pivot/WeaponPivot").AddChild(weapon);
-        //TODO move this to separate function Update weapon aliases
-        var weapon_move_deck = weapon.GetChildren();
-        foreach (var child in weapon_move_deck)
-        {
-            if (child is MoveUi)
-            {
-                var move_el = child as MoveUi;
-                move_deck_aliases.Add(move_el.moveInfo.Alias_label, $"AnimationPlayer/{move_el.moveInfo.MoveDescription}"); //weapon.GetAttackAnimation(move_el.moveInfo.Input_label)
-                CheckEnabledMoves(move_el.moveInfo.Alias_label);
-            }
-        }
-
     }
 
     public void CheckEnabledMoves(string alias)
@@ -888,13 +927,15 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
 
     public void DeSlotWeapon(int idx, string node_path)
     {
-        var weapon_move_deck = weapon.GetChildren();
-        foreach (var child in weapon_move_deck)
-        {
-            if (child is MoveUi)
+        if(weapon!=null){
+            var weapon_move_deck = weapon.GetChildren();
+            foreach (var child in weapon_move_deck)
             {
-                var move_el = child as MoveUi;
-                DisableMove(move_el.moveInfo.Alias_label);
+                if (child is MoveUi)
+                {
+                    var move_el = child as MoveUi;
+                    DisableMove(move_el.moveInfo.Alias_label);
+                }
             }
         }
         weapon.QueueFree();

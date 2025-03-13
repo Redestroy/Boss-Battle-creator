@@ -10,10 +10,21 @@ public partial class MoveInfo : Resource{
     public string Alias_label{get; set;} = "";
     [Export]
     public string MoveDescription{get; set;} = "";
+    
+    [Export]
+    public string MovePath{get; set;} = "";
+
+    [Export]
+    public string EquippableSlot{get; set;} = "";
+    [Export]
+    public string EquippableType{get; set;} = "";
     [Export]
     public float Cooldown{get; set;} = 0.01f;
     [Export]
     public Texture2D Card_image{get;set;}
+
+    [Export]
+    public EquippableInfo EquippableParent{get; set;}
 
     public MoveInfo() : this("", "", "") {}
 

@@ -10,6 +10,8 @@ public partial class Item : Node3D
 	private bool delete_this = false;
 	[Export]
 	private bool on_ground = false;
+	[Export]
+	public string PickupType{get;set;}
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
@@ -44,7 +46,7 @@ public partial class Item : Node3D
 	}
 
 	public void OnPickup(Player player){
-		player.AddItemInInventory(node_path);
+		player.AddItemInInventory(node_path, PickupType);
 		delete_this = true;
 	}
 }

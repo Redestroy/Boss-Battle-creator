@@ -31,7 +31,6 @@
 // 4) Add navigator perhaps?                
 // 4) Maybe can use as projectile           TODO
 
-using BossBattleClash;
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -465,9 +464,16 @@ public partial class Mob : Character, IEnvEnemy, IDamageable, IVitriolic{
     }
 
     public void DropItem(){
-        this.RemoveChild(MobItem);
-        MobItem.DropItem(FindMarker("Item"));
-        marker_source.AddChild(MobItem);
+        if(MobItem!=null){
+            this.RemoveChild(MobItem);
+            MobItem.DropItem(FindMarker("Item"));
+            marker_source.AddChild(MobItem);
+        }
+    }
+
+    public override Inventory LoadInventory()
+    {
+        return new Inventory();
     }
 
 }

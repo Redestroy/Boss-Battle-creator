@@ -40,6 +40,13 @@ public abstract partial class Arena : Node3D
 
 	[Signal]
 	public delegate void SigDefeatEventHandler();
+
+	[Signal]
+	public delegate void SigLeavingSceneEventHandler();
+
+	[Export]
+	public string RewardPath{get;set;}
+
 	private double counter;
 	protected Player player;
 	protected IVitriolic main_enemy;
@@ -60,7 +67,12 @@ public abstract partial class Arena : Node3D
 	private double player_health_max;
 	private int boss_health;
 	private double boss_health_max;
+	private PackedScene reward_card;
 
+	protected Godot.Collections.Dictionary<string, Marker3D> spawn_markers;
+	protected Godot.Collections.Dictionary<string, string> nodes_to_spawn;
+	protected Godot.Collections.Dictionary<string, string> item_scene_paths;
+	protected Godot.Collections.Dictionary<string, PackedScene> item_scenes;
 	private Godot.Collections.Dictionary<string, Marker3D> target_markers;
 	private Godot.Collections.Dictionary<string, Variant> event_deck;
 
@@ -68,6 +80,10 @@ public abstract partial class Arena : Node3D
 
 	public override async void _Ready()
 	{
+		if(!CharacterInformation.InformationInitiated){
+			CharacterInformation.InitializeCharacterInformation();
+			CharacterInformation.active_scene = this.Name;
+		}
 		counter = 0;
 		if(GetParent() != null){
 			GD.Print(GetParent().ToString());
@@ -76,8 +92,29 @@ public abstract partial class Arena : Node3D
 			//await RenderingServer.Singleton.ToSignal(GetParent(), SignalName.Ready);
 		}
 		target_markers = new Godot.Collections.Dictionary<string, Marker3D>();
+		spawn_markers = new Godot.Collections.Dictionary<string, Marker3D>();
+		nodes_to_spawn = new Godot.Collections.Dictionary<string, string>();
+		reward_card = ResourceLoader.Load<PackedScene>(RewardPath);
+		item_scene_paths = new Godot.Collections.Dictionary<string, string>();
+		item_scene_paths.Add("reward", RewardPath);
+		item_scenes = new Godot.Collections.Dictionary<string, PackedScene>();
+		foreach(var item_path in item_scene_paths){
+			item_scenes.Add(item_path.Key, ResourceLoader.Load<PackedScene>(item_path.Value));
+		}
 
+		//Debug
+		var global_inv = (GlobalInventory) GetNode("/root/GlobalInventory");
+		GD.Print("Inventories count: " + global_inv.inventories.Count);
+		foreach (var inventory in global_inv.inventories)
+		{
+    		GD.Print($"Inventory: {inventory.Key} | Items: {inventory.Value.items.Count}");
+		}
 		//OnPlayerEntered(player);
+	}
+
+	public void _on_leaving_scene_door(string next_scene){
+		// connect all dors to this, then emit signal
+		EmitSignal(SignalName.SigLeavingScene, next_scene);
 	}
 
 	public void PostReady(){
@@ -118,23 +155,53 @@ public abstract partial class Arena : Node3D
         //Kill boss
 		//main_enemy.Despawn(); // Handle this in child
         //Save screenshots
+		//Spawn reward
+		if(reward_card != null){
+			var reward = reward_card.Instantiate() as Item;
+			GD.Print($"Reward spawned {reward}");
+			Marker3D rew_pos = GetNodeOrNull<Marker3D>("Skymove/SpawnRewardCard");
+			if(rew_pos == null){
+				rew_pos = spawn_markers["SpawnRewardCard"];
+			}
+			GD.Print($"Reward position {rew_pos}");
+			GD.Print($"Reward {reward}");
+			GD.Print($"Reward {reward_card}");
+			reward.DropItem(rew_pos);
+			this.AddChild(reward);
+		}
         //Spawn exit
 		GD.Print($"door deck {door_deck}");
-		if(door_deck.ContainsKey("keystone_victory")){
-        	Door door = door_deck["keystone_victory"]; //"VictoryDoor" // Change this to be less hardcoded - improve door deck
-			Marker3D door_pos = GetNode<Marker3D>("Skymove/SpawnVictoryDoor");
+		if(door_deck.ContainsKey("VictoryKeystone")){
+        	Door door = door_deck["VictoryKeystone"]; //"VictoryDoor" // Change this to be less hardcoded - improve door deck
+			Marker3D door_pos = GetNodeOrNull<Marker3D>("Skymove/SpawnVictoryDoor");
+			if(door_pos == null){
+				door_pos = spawn_markers["SpawnVictoryDoor"];
+			}
         	door.TeleportTo(door_pos);
 		}else{
 			GD.Print("No Victory keystone found");
+			foreach(var door in door_deck){
+				GD.Print($"Door {door.Key}");
+			}
 		}
 		player.GetHUD().UpdateHelpText("You Win!");
 		EmitSignal(SignalName.SigVictory);
 		//Trigger animation and lighting as well
     }
 
+	public virtual void DropItem(string item_scene_key, string spawn_marker_node_path){
+		var drop = item_scenes[item_scene_key].Instantiate() as Item;
+		Marker3D drop_pos = GetNodeOrNull<Marker3D>(spawn_marker_node_path);
+		if(drop_pos == null){
+			drop_pos = spawn_markers[spawn_marker_node_path];
+		}
+		drop.DropItem(drop_pos);
+		this.AddChild(drop);
+	} 
+
     public virtual void OnDefeat(){
 		EmitSignal(SignalName.SigVictory);
-        Door door = door_deck["keystone_enemy"];
+        Door door = door_deck["EnemyKeystone"];
 		player.GetHUD().UpdateHelpText("You died!", false);
 		active = false;
         door.OnDoorTriggered();
@@ -219,5 +286,12 @@ public abstract partial class Arena : Node3D
         // Store the save dictionary as a new line in the save file.
         //saveFile.StoreLine(jsonString);
     	//}
+	}
+
+	public static Marker3D CreateMarker3D(MarkerInfoC markerInfo){
+		Marker3D marker = new Marker3D();
+		marker.Position = new Vector3(markerInfo.Px, markerInfo.Py, markerInfo.Pz);
+		marker.Quaternion = markerInfo.angle;
+		return marker;
 	}
 }

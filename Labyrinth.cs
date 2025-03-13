@@ -7,6 +7,8 @@ public partial class Labyrinth : Node3D
 	private Player player;
 	private IVitriolic main_enemy;
 	private Vitriol main_enemy_vitriol;
+	[Signal]
+	public delegate void SigLeavingSceneEventHandler();
 
 	public bool active = false;
 	// Called when the node enters the scene tree for the first time.
@@ -18,6 +20,7 @@ public partial class Labyrinth : Node3D
 	public void PostReady(){
 		
 		player = GetNode<Player>("Player");
+		this.Connect("SigLeavingScene", new Callable(player, nameof(player._on_leaving_scene)));
 		//player._set_active();
 		//boss = GetNode<Boss>("ShadeBoss");
 		//main_enemy = GetEnemy();
@@ -52,5 +55,10 @@ public partial class Labyrinth : Node3D
 		// release player
 		//player.Release();
 		player._set_active();
+	}
+
+	public void _on_leaving_scene(string next_scene){
+		CharacterInformation.active_scene = next_scene;
+		CharacterInformation.previous_scene = this.Name;
 	}
 }

@@ -7,6 +7,9 @@ public partial class Door : Node3D
 	[Signal]
     public delegate void LookingAtDoorEventHandler(InputEvent ev, string door_text);
 
+	[Signal]
+    public delegate void LeavingSceneEventHandler(string next_scene);
+
 	[Export]
 	public string scene_triggered {get; set;} = "res://Arena_shade.tscn";
 
@@ -21,13 +24,18 @@ public partial class Door : Node3D
 		//Connect("input_event", new Callable(this, nameof(_on_input_event)));
 	}
 
+	public void InitializeDoor(DoorInfo info){
+		this.scene_triggered = info.scene_triggered;
+		this.door_text = info.door_text;
+	}
+
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
 	}
 
 	public void _on_input_event(Camera3D camera, InputEvent ev, Vector3 event_position, Vector3 normal, int shape_idx){
-		GD.Print("Door event");
+		//GD.Print("Door event");
 		OnDoorEvent(ev);
 	}
 
@@ -44,6 +52,7 @@ public partial class Door : Node3D
 	}
 
 	public void OnDoorTriggered(){
+		EmitSignal(SignalName.LeavingScene, scene_triggered);
 		GetTree().ChangeSceneToFile(scene_triggered);
 	}
 
@@ -54,6 +63,10 @@ public partial class Door : Node3D
         }else{
             this.GlobalPosition = spot.GlobalPosition;
         }
+	}
+
+	public static DoorInfo GetDoorInfo(Door door){
+		return new DoorInfo(door);
 	}
 
 }

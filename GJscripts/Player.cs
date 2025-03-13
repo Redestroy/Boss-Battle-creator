@@ -10,9 +10,9 @@ using System.Linq;
 
 // TODO player functionality
 // 1) Input mapping
-// 2) HUD
+// 2) HUD In Progress 
 // 3) Camera viewport
-// 4) Inventory
+// 4) Inventory In progress // ISSUE: Problems on loading inventory for mob, player
 // 5) Ext. Targetable/ish, Character
 // 6) 
 
@@ -80,10 +80,17 @@ public partial class Player : Character, IDamageable
 		heart.Died += OnDeath;
 		if(collision_damage < 5) collision_damage = 5;
 		hud = GetHUD();
-		if(hud!= null){
+		//if(hud!= null){
 			hud.SigEquipItem += SlotItem;
 			hud.SigDeEquipItem += DeSlotItem;
-		}
+			hud.Connect("SigEquipMove", new Callable(this, nameof(SlotMove)));
+			hud.Connect("SigDeEquipMove", new Callable(this, nameof(DeSlotMove)));
+			//hud.SigEquipMove += SlotMove;
+			//hud.SigDeEquipMove += DeSlotMove;
+		//}
+		hud.move_deck_display.AttachPlayer(this);
+		//this.SigSlotItem += hud.move_deck_display._on_slot_item;
+		//this.SigDeSlotItem += hud.move_deck_display._on_deslot_item;
 		OnDamage(initial_damage);
 		hud.UpdateLifeBar();
 
@@ -96,9 +103,13 @@ public partial class Player : Character, IDamageable
 			arena.SigVictory += HUD_VictoryUpdate;
 			arena.SigDefeat += HUD_DefeatUpdate;
 		}
+		if(CharacterInformation.previous_scene != ""){
+			OnSceneEntered();
+		}
 		//arena = GetParent<Node3D>();//GetParent<Arena>();
 		//TeleportTo(Spawn);
 		//raycast = GetNode<RayCast3D>("RayCast3D");
+		hud.Refresh();
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -165,6 +176,10 @@ public partial class Player : Character, IDamageable
 		hud.UpdateHelpText(door_text);
 	}
 
+	public void OnSceneEntered(){
+		RestoreState();
+	}
+
 
 	public Player GetActivePlayer()
 	{
@@ -221,6 +236,7 @@ public partial class Player : Character, IDamageable
 	{
 		active_player.change_player("PLACEHOLDER");
 		active_player = this;
+		//this.GetHUD() // TODO reInit HUD on new player
 		camera.MakeCurrent();
 		is_active = true;
 	}
@@ -228,6 +244,12 @@ public partial class Player : Character, IDamageable
 	public virtual void _on_input_event()
 	{
 		GD.Print("Clicked on player");
+	}
+
+	public virtual void _on_leaving_scene(string next_scene){
+		//save inventory
+		CharacterInformation.previous_scene = arena.Name;
+		StoreState();
 	}
 
 	public virtual void OnPlayAction(string tag)
@@ -243,12 +265,21 @@ public partial class Player : Character, IDamageable
 
 	public void StoreState()
 	{
+		GD.Print($"Save state{Name}");
+		var global_inv = (GlobalInventory) GetNode("/root/GlobalInventory");
+		global_inv.SaveInventory(this.Name, inventory);
 		//load health, weapon and modifiers to file/singleton to store info between scenes
 	}
 
 	public void RestoreState()
 	{
 		// Read info (for variables) from file
+		GD.Print($"Restore state{Name}");
+		var global_inv = (GlobalInventory) GetNode("/root/GlobalInventory");
+		inventory = global_inv.LoadInventory(this.Name);
+		inventory.PrintContents();
+		ReinstanceEquipment();
+		//hud.Refresh();
 	}
 
 	public void SaveArena()
@@ -280,7 +311,7 @@ public partial class Player : Character, IDamageable
 	}
 
 	public void UpdateLifeBar()
-	{ //NIT Maybe change getting a reference each time (or not)
+	{
 		hud.UpdateLifeBar();
 	}
 
@@ -411,7 +442,6 @@ public partial class Player : Character, IDamageable
 	}
 
 	//Collision handling
-	// On area interactions
 	public override void OnAreaEntered(Area3D area)
 	{
 		GD.Print("Entered area");
@@ -424,7 +454,6 @@ public partial class Player : Character, IDamageable
 	{
 		GD.Print("Exited area");
 	}
-	// On collisions with Environment - Static body
 	public override void OnCollidedWithEnvironment(StaticBody3D collider)
 	{
 		if (!IsOnFloor())
@@ -432,12 +461,10 @@ public partial class Player : Character, IDamageable
 			GD.Print("Hit environment wall");
 		}
 	}
-	// On collisions with objects - Rigid body
 	public override void OnCollidedWithObject(RigidBody3D collider)
 	{
 		GD.Print("Hit object");
 	}
-	// On collisions with characters
 	public override void OnCollidedWithCharacter(CharacterBody3D collider)
 	{
 		GD.Print("Ran into another character");
@@ -449,23 +476,34 @@ public partial class Player : Character, IDamageable
 			enemy.OnDamage(this.collision_damage);
 		}
 	}
-	// On collisions with weapons
 	public override void OnCollidedWithWeapon(Weapon collider)
 	{
-		GD.Print("Hit a weapon");
-		this.OnDamage(collider.Damage);
+		GD.Print($"Collider layer {collider.CollisionLayer}");
+		if(weapon.IsNodeReady() && weapon.IsEquipped){
+			GD.Print("Hit a weapon");
+			this.OnDamage(collider.Damage);
+		}
 	}
 
-	public void AddItemInInventory(string node_path){
+	public void AddItemInInventory(string node_path, string type){
 		// Currently, just have a list in the hud that just has all the strings
 		// Later attach a node to player
 		// 1st) Load PackedScene
+		GD.Print($"Type {type}");
 		var packedScene = LoadItemScene(node_path);
 		// 2nd) Add PackedScene item name to the item list
 		string display_name = packedScene.GetState().GetNodeName(0);
-		int index = GetHUD().AddToItemList(display_name);
-		// 3rd) Save (item name, PackedScene) in dictionary under it's item index (get it from a different dict/file?)
-		inventory.Add(index, new Tuple<string, PackedScene>(display_name, packedScene));
+		inventory.OnPickup(display_name, node_path, type);
+		if(type == "Move"){
+			int index = GetHUD().AddToMoveList(display_name);
+			move_inventory_ref_.Add(index, new Tuple<string, PackedScene>(display_name, packedScene));
+			GetHUD().move_inventory_ref_ui.Add(index);
+		}
+		else{
+			int index = GetHUD().AddToItemList(display_name);
+			inventory_ref_.Add(index, new Tuple<string, PackedScene>(display_name, packedScene));
+			GetHUD().inventory_ref_ui.Add(index);
+		}
 	}
 
 	public HUD GetHUD()
