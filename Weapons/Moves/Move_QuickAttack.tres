@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MoveInfo" load_steps=3 format=3 uid="uid://t6gj7jjctv5j"]
+
+[ext_resource type="Texture2D" uid="uid://xbvucluux8mf" path="res://Assets/Paint/Card_ChakramLMB.png" id="1_gto7n"]
+[ext_resource type="Script" uid="uid://by8kbtavugiod" path="res://Weapons/Moves/MoveInfo.cs" id="2_7y5hn"]
+
+[resource]
+script = ExtResource("2_7y5hn")
+Input_label = "LMB"
+Alias_label = "QuickAttack"
+MoveDescription = "Throw the chakram straight at enemy"
+EquippableSlot = "LMB"
+EquippableType = "Weapon"
+Cooldown = 0.01
+Card_image = ExtResource("1_gto7n")
