@@ -26,6 +26,12 @@ public partial class MoveInfo : Resource{
     [Export]
     public EquippableInfo EquippableParent{get; set;}
 
+    [Export]
+    public string move_order{get; set;}
+
+    [Export]
+    public Godot.Collections.Array<GodotStringPair> move_animation{get; set;}
+
     public MoveInfo() : this("", "", "") {}
 
     public MoveInfo(string input_l, string alias_l, string md){

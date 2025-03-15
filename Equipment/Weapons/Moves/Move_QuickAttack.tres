@@ -1,7 +1,14 @@
-[gd_resource type="Resource" script_class="MoveInfo" load_steps=3 format=3 uid="uid://t6gj7jjctv5j"]
+[gd_resource type="Resource" script_class="MoveInfo" load_steps=5 format=3 uid="uid://t6gj7jjctv5j"]
 
 [ext_resource type="Texture2D" uid="uid://ccpykygcjsqbw" path="res://Assets/Paint/MiniCard_chackram_quickattack.png" id="1_updwe"]
 [ext_resource type="Script" uid="uid://by8kbtavugiod" path="res://Equipment/Weapons/Moves/MoveInfo.cs" id="2_7y5hn"]
+[ext_resource type="Script" uid="uid://7161el3h85ty" path="res://Bosses/StateMachines/GodotStringPair.cs" id="2_qy5iu"]
+
+[sub_resource type="Resource" id="Resource_thark"]
+script = ExtResource("2_qy5iu")
+From = "Character"
+To = "Animation_LActionExtend"
+metadata/_custom_type_script = "uid://7161el3h85ty"
 
 [resource]
 script = ExtResource("2_7y5hn")
@@ -13,3 +20,5 @@ EquippableSlot = "LMB"
 EquippableType = "Weapon"
 Cooldown = 0.01
 Card_image = ExtResource("1_updwe")
+move_order = "Animation/Play/QuickAttack"
+move_animation = Array[Object]([SubResource("Resource_thark")])

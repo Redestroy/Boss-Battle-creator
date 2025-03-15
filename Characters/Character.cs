@@ -7,7 +7,7 @@
 //      For movement executor, create file for shorthand moves (would allow for customization)
 // Refactoring note:
 //      Could move file logic to a separate space
-// 1) Animation player (With an animation deck)                             // TODO - load in animations from external file
+// 1) Animation player (With an animation deck)                             // Doneish, Testing
 // 2) Move deck - Dictionary with string tokens and function calls          // Currently move aliases, uses executors
 // 3) Collisions - Deal with collisions of the character                    // Doneish, relies on abstract methods         - Find a way to disable collisions with children
 // 4) Movement - Deal with character movement and movement calculations     // Doneish, Fixed input reliance. Rotation is still offset, seems like origin might need to be moved, but movement works     - Need to add shorthand check for the movement executor 
@@ -62,7 +62,9 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
 
     // Executors
     public AnimationPlayer animationPlayer; // Maybe add methods instead of making public?
-    private MovementExecutor movementExecutor;
+
+    private AnimationExecutor animationExecutor = new AnimationExecutor();
+    private MovementExecutor movementExecutor = new MovementExecutor();
     Dictionary<string, Animation> animation_deck;
     
     public Dictionary<string, Equippable> item_instances = new Dictionary<string, Equippable>();
@@ -70,8 +72,14 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
     //public Dictionary<string, Equippable> equipment;
     //public Dictionary<string, Equippable> move_attachment_to_equipment;
 
-    Dictionary<string, Move> move_deck;
+    Dictionary<string, MoveInfo> move_deck = new Dictionary<string, MoveInfo>();
     List<string> move_keys;
+    List<string> default_moves = new List<string>{
+                                                        "Movement/DeltaFWD",
+                                                        "Movement/DeltaBWD",
+                                                        "Movement/DeltaTurnLeft",
+                                                        "Movement/DeltaTurnRight",
+                                                        };
     Dictionary<string, string> move_deck_aliases;
     public Dictionary<int, string> move_deck_ids = new Dictionary<int, string>();
     private Dictionary<string, bool> move_mask = new Dictionary<string, bool>();
@@ -100,8 +108,9 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
         {
             animationPlayer = CreateAnimationPlayer(this);
         }
-        movementExecutor = new MovementExecutor();
         movementExecutor.Init(Velocity, Transform, Speed, JumpVelocity, FlySpeed, JumpImpulse, FallAcceleration);
+        animationExecutor.Init();
+        
         // Load animations
         // animation_deck = LoadAnimations("file_name");
         
@@ -114,6 +123,7 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
         move_deck_aliases = LoadAliases();
         LoadIds(move_deck_aliases);
         last_delta = 0.0;
+        animationExecutor.GetPlayersFromCharacter(this);
         // Hardcoded deck should be replaced, but may exist in End chars until saving and loading is done
         // Slime example
         // move_deck_aliases["QuickAttack"] = "AnimationPlayer/Idle";
@@ -280,22 +290,21 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
         }
         if (!IsAvailableMove(move_alias))
         {
-            GD.Print($"Move disabled{move_alias}");
+            GD.Print($"Move disabled {move_alias}");
             return;
         }
         string executor = move_deck_aliases[move_alias].Substring(0, split);
         string order = move_deck_aliases[move_alias].Substring(split + 1);
         switch (executor)
         {
-            case "AnimationPlayer":
-                animationPlayer.Play(order);
+            case "Animation":
+                animationExecutor.ExecuteOrder(order);
                 break;
             case "TeleportTo":
                 TeleportTo(FindMarker(order));
                 break;
             case "Movement":
                 movementExecutor.ExecuteOrder(order);
-
                 break;
             default:
                 Execute(executor, order);
@@ -367,8 +376,6 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
             EnableMove(item);
         }
     }
-
-    
 
     public void SetScale(float factor)
     {
@@ -484,6 +491,41 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
     public abstract Marker3D GetSpawn();
     public abstract string GetScenePath();
 
+    // Move deck
+    public void AddToMoveDeck(MoveInfo move){
+        move_deck.TryAdd<string, MoveInfo>(move.Alias_label, move);
+        move_deck_aliases.TryAdd<string,string>(move.Alias_label, move.move_order);
+        EnableMove(move.Alias_label);
+    }
+
+    public void RemoveFromMoveDeck(MoveInfo move){
+        if(move_deck.ContainsKey(move.Alias_label)){
+            move_deck.Remove(move.Alias_label);
+            move_deck_aliases.Remove(move.Alias_label);
+            DisableMove(move.Alias_label);
+        }
+    }
+
+    public void RefreshMoveDeck(){
+        ClearCardMoves();
+        foreach(var item in inventory.equipment){
+            foreach(var move in item.Value.slots){
+                animationExecutor.AddBundleFromMove(move);
+                AddToMoveDeck(move);
+            }
+        }
+    }
+
+    public void ClearCardMoves(){
+        for(int i = 0; i<move_deck_aliases.Count; i++){
+            string move_alias = move_deck_aliases.ElementAt(i).Key;
+            if(!default_moves.Contains(move_deck_aliases[move_alias])){
+                if(move_deck.TryGetValue(move_alias, out MoveInfo move))
+                    RemoveFromMoveDeck(move);
+            }
+        }
+    }
+
     // Item functions for slots
     // General
     public PackedScene LoadItemScene(int idx){
@@ -512,6 +554,7 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
             item_instances[eqquipable.Value.Display_label] = LoadItemScene(eqquipable.Value.ItemPath).Instantiate() as Equippable;
             InstanceEquippable(item_instances[eqquipable.Value.Display_label]);
         }
+        //animationExecutor.GetPlayersFromCharacter(this);
     }
 
     public void InstanceEquippable(Equippable equippable){
@@ -526,6 +569,8 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
             GD.Print("Equipped weapon");
             weapon = equippable as Weapon;
         }
+        animationExecutor.AddAnimationPlayer(equippable.equippableInfo.EquippableType, equippable.animationPlayer);
+        RefreshMoveDeck();
         this.SetPhysicsProcess(true);
     }
 
@@ -552,7 +597,9 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
         var move = LoadMoveScene(idx).Instantiate() as MoveUi;
         if(inventory.equipment.TryGetValue(move.moveInfo.EquippableType, out EquippableInfo item)){
             item_instances[item.Display_label].AddMove(move);
+            animationExecutor.AddBundleFromMove(move.moveInfo);
             inventory.SlotMoveOnEquippable(move.moveInfo, item);
+            AddToMoveDeck(move.moveInfo);
         }
     }
 
@@ -569,6 +616,8 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
             if(item_instances[item.Display_label] is Weapon){
                 weapon = null;
             }
+            animationExecutor.RemoveAnimationPlayer(item.EquippableType);
+            RefreshMoveDeck();
             item_instances[item.Display_label].Stow();
             item_instances.Remove(item.Display_label);
         }
@@ -576,6 +625,9 @@ public abstract partial class Character : CharacterBody3D, IArenaObject
 
     public void DeSlotMove(string item_string){
         // Remove move from weapon
+        var move = item_instances[inventory.GetEquippableNameForMoveByAttachment(item_string)].GetMoveByName(item_string);
+        animationExecutor.RemoveBundleFromMove(move);
+        RemoveFromMoveDeck(move);
         item_instances[inventory.GetEquippableNameForMoveByAttachment(item_string)].RemoveMoveByName(item_string);
         // Remove move from move deck
         inventory.RemoveMoveFromItem(item_string);

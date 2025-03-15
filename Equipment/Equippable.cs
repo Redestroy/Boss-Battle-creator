@@ -16,6 +16,8 @@ public abstract partial class Equippable : AnimatableBody3D, IEquippable
     
     public Godot.Collections.Array<MoveUi> moveUIs{get;set;} // Check if actually required
 
+    public AnimationPlayer animationPlayer;
+
     public virtual string MarkerTag{get;set;} // Slightly redundant
 
     public bool IsEquipped{get;private set;} = false;
@@ -24,6 +26,11 @@ public abstract partial class Equippable : AnimatableBody3D, IEquippable
         this.moveInfos ??= new Godot.Collections.Array<MoveInfo>();
         this.moveUIs ??= new Godot.Collections.Array<MoveUi>();
         this.equippableInfo ??= new EquippableInfo();
+        animationPlayer = GetNodeOrNull<AnimationPlayer>("AnimationPlayer");
+        if(animationPlayer == null){
+            animationPlayer = new AnimationPlayer();
+            AddChild(animationPlayer);
+        }
     }
 
     public Equippable(Godot.Collections.Array<MoveInfo> moveInfos_, Godot.Collections.Array<MoveUi> moveUis_){
@@ -85,6 +92,15 @@ public abstract partial class Equippable : AnimatableBody3D, IEquippable
                 return;
             }
         }
+    }
+
+    public MoveInfo GetMoveByName(string move_name){
+        for(int i = 0; i<moveInfos.Count; i++){
+            if(move_name == moveInfos[i].Alias_label){
+                return moveInfos[i];
+            }
+        }
+        return null;
     }
 
     public virtual void RemoveMove(MoveUi move){ //TODO: modify to use Equippable info

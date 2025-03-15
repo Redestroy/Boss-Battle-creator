@@ -5,7 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Numerics;
-public class MovementExecutor
+public partial class MovementExecutor : Executor
 {
 
     public float Speed { set; get; } = 5.0f;
@@ -20,7 +20,6 @@ public class MovementExecutor
     public bool IsOnFloor { get; set; } = true;
     public bool CanFly { get; set; } = false;
 
-    public Dictionary<string, string> shorthands;
     private Godot.Vector3 move_vector;
     private int counter;
     private int cooldown;
@@ -31,21 +30,20 @@ public class MovementExecutor
     public MovementExecutor()
     {
         last_delta = 0.0;
-        shorthands = new Dictionary<string, string>();
         float delta_x = 0.15f;
         float delta_rot = 0.15f;
         counter = 0;
         cooldown = 1;
         at_rest = false;
         move_vector = Godot.Vector3.Zero;
-        shorthands.Add("DeltaFWD", $"Move/Z/{Speed * delta_x}");
-        shorthands.Add("DeltaBWD", $"Move/Z/{-Speed * delta_x}");
-        shorthands.Add("DeltaTurnRight", $"Rotate/{-delta_rot}");
-        shorthands.Add("DeltaTurnLeft", $"Rotate/{delta_rot}");
-        shorthands.Add("SmallJump", $"Jump/{JumpImpulse}");
-        shorthands.Add("BigJump", $"Jump/{5 * JumpImpulse}");
-        shorthands.Add("Fly", $"Fly/{FlySpeed}");
-        shorthands.Add("Rest", $"Move/X/0/Z/0");
+        Shorthands.Add("DeltaFWD", $"Move/Z/{Speed * delta_x}");
+        Shorthands.Add("DeltaBWD", $"Move/Z/{-Speed * delta_x}");
+        Shorthands.Add("DeltaTurnRight", $"Rotate/{-delta_rot}");
+        Shorthands.Add("DeltaTurnLeft", $"Rotate/{delta_rot}");
+        Shorthands.Add("SmallJump", $"Jump/{JumpImpulse}");
+        Shorthands.Add("BigJump", $"Jump/{5 * JumpImpulse}");
+        Shorthands.Add("Fly", $"Fly/{FlySpeed}");
+        Shorthands.Add("Rest", $"Move/X/0/Z/0");
         //shorthands.Add("Rotate", "");
         //shorthands.Add("Rotate", "");
         //shorthands.Add("Rotate", "");
@@ -54,8 +52,13 @@ public class MovementExecutor
         //shorthands.Add("Rotate", "");
     }
 
+    public override void Init(){
+        GD.Print("MovementExecutor initiated");
+    }
+
     public void Init(Godot.Vector3 v, Transform3D t3, float s = 0.0f, float jv = 0.0f, float fs = 0.0f, float ji = 20.0f, float fa = 75.0f, bool g = true, bool iof = true, bool cf = false)
     {
+        Init();
         Speed = s;
         JumpVelocity = jv;
         FlySpeed = fs;
@@ -122,19 +125,9 @@ public class MovementExecutor
         transform3D = transform;
     }
 
-    public void ExecuteOrder(string order)
+    public override void ExecuteOrder(string order)
     {
-        if (!order.Contains("/"))
-        {
-            foreach (var shorthand in shorthands.Keys)
-            {
-                if (shorthand == order)
-                {
-                    ExecuteOrder(shorthands[shorthand]);
-                    return;
-                }
-            }
-        }
+        base.ExecuteOrder(order);
         at_rest = false;
         string[] parts = order.Split(new[] { "/" }, StringSplitOptions.None);
         switch (parts[0])
@@ -276,13 +269,14 @@ public class MovementExecutor
         }
     }
 
-    public virtual void OnExecuteFailed(string order)
+    public override void OnExecuteFailed(string order)
     {
 
     }
 
     public void OnUpdate(double delta, Godot.Vector3 v, Transform3D t3, bool iof, bool input_happened, bool teleport)
     {
+        OnUpdate();
         last_delta = delta;
         // Default move set
         // 1) Create a cooldown that resets velocity on no input
@@ -298,6 +292,11 @@ public class MovementExecutor
             }
         }
         SyncWithCharacter(v, t3, iof);
+    }
+
+    public override void OnUpdate()
+    {
+        //GD.Print("On update");
     }
 
     public Godot.Vector3 GetVelocity()

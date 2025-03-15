@@ -60,10 +60,10 @@ attachments/0/offset = Vector3(0.5, 0.5, -0.5)
 mesh = SubResource("BoxMesh_jwpb5")
 
 [node name="WeaponPivot" type="Marker3D" parent="Pivot"]
-transform = Transform3D(0.0318984, 1.35042e-07, 0.999491, -0.277425, 0.960707, 0.00885378, -0.960218, -0.277566, 0.030645, 0, 0, 0)
+transform = Transform3D(0.0318987, 5.24335e-07, 0.999491, -0.277425, 0.960707, 0.00885348, -0.960218, -0.277566, 0.0306454, 0, 0, 0)
 
 [node name="WeaponMarker" type="Marker3D" parent="Pivot/WeaponPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4.45422)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.89)
 
 [node name="Marker3D" type="Marker3D" parent="."]
 transform = Transform3D(0.998341, -0.0338385, 0.0465679, 2.96104e-09, 0.808976, 0.587842, -0.0575639, -0.586867, 0.807635, 0, 0, 0)

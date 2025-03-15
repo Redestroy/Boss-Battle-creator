@@ -15,19 +15,19 @@
 [sub_resource type="Resource" id="Resource_emyf7"]
 script = ExtResource("1_flwbl")
 DoorName = "ReturnKeystone"
-scene_triggered = "res://Labyrinth.tscn"
+scene_triggered = "res://Arenas/Paths/Labyrinth.tscn"
 door_text = "Do you wish to flee?"
 
 [sub_resource type="Resource" id="Resource_ibjpk"]
 script = ExtResource("1_flwbl")
 DoorName = "EnemyKeystone"
-scene_triggered = "res://Labyrinth.tscn"
+scene_triggered = "res://Arenas/Paths/Labyrinth.tscn"
 door_text = "Death awaits, but whom..."
 
 [sub_resource type="Resource" id="Resource_e2ksq"]
 script = ExtResource("1_flwbl")
 DoorName = "VictoryKeystone"
-scene_triggered = "res://Labyrinth.tscn"
+scene_triggered = "res://Arenas/Paths/Labyrinth.tscn"
 door_text = "Return to overworld?"
 
 [sub_resource type="Resource" id="Resource_srt0m"]
