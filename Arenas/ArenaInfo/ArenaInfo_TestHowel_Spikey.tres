@@ -48,6 +48,6 @@ WorldEnvironment = ExtResource("9_dblrr")
 SkymoveInfo = ExtResource("2_wsopb")
 SpawnMarkers = Array[Object]([ExtResource("3_fedms"), ExtResource("4_heevb"), ExtResource("5_e604q"), ExtResource("6_isix4"), ExtResource("7_gvdas"), ExtResource("8_4vybx"), SubResource("Resource_srt0m")])
 NodeScenePaths = {
-"Keystone": "res://keystone.tscn"
+"Keystone": "res://Environment/Doors/keystone.tscn"
 }
 DoorInfoDeck = Array[Object]([SubResource("Resource_emyf7"), SubResource("Resource_ibjpk"), SubResource("Resource_e2ksq")])

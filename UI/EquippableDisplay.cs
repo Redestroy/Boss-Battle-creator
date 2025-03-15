@@ -4,6 +4,10 @@ using Godot;
 
 public partial class EquippableDisplay : Control
 {
+    [Export]
+    public string move_ui_scene_path{get;set;} = "res://Equipment/Weapons/Moves/Move_QuickAttack.tscn";
+    [Export]
+    public string move_ui_scene_empty_path{get;set;} = "res://Equipment/Weapons/Moves/Move_Empty.tscn";
     public Godot.Collections.Dictionary<string, MoveInfo> moveInfos;
     Label equippable_name;
 
@@ -32,8 +36,8 @@ public partial class EquippableDisplay : Control
         equippable_name = this.GetNode<Label>("VBoxContainer/LabelEquippable");
         horizontalContainer = this.GetNode<HBoxContainer>("VBoxContainer/HBoxContainer");
         moveInfos = new Godot.Collections.Dictionary<string, MoveInfo>();
-        moveUiScene = ResourceLoader.Load<PackedScene>("res://Weapons/Moves/Move_QuickAttack.tscn");
-        moveUiSceneEmpty = ResourceLoader.Load<PackedScene>("res://Weapons/Moves/Move_Empty.tscn");
+        moveUiScene = ResourceLoader.Load<PackedScene>(move_ui_scene_path);
+        moveUiSceneEmpty = ResourceLoader.Load<PackedScene>(move_ui_scene_empty_path);
     }
 
     public void _on_equip_move_card(MoveInfo move_ui){

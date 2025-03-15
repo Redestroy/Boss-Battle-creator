@@ -1,6 +1,6 @@
 [gd_scene load_steps=11 format=3 uid="uid://5cc8ce0fhrxq"]
 
-[ext_resource type="PackedScene" uid="uid://3x7xlf7ycgji" path="res://SlimeMob.tscn" id="1_74o7r"]
+[ext_resource type="PackedScene" uid="uid://3x7xlf7ycgji" path="res://Characters/Slime/SlimeMob.tscn" id="1_74o7r"]
 [ext_resource type="Script" uid="uid://btwtim53swwxd" path="res://Assets/Resources/ResourceTestingNode.cs" id="2_jw5do"]
 [ext_resource type="Script" uid="uid://doc2mffhhltl1" path="res://Bosses/StateMachines/SlimeState_Idle.cs" id="3_ko2ei"]
 [ext_resource type="Script" uid="uid://i32py8awobvh" path="res://Bosses/StateMachines/SlimeState_Wander.cs" id="4_yp1j1"]

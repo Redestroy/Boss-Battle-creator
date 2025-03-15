@@ -3,6 +3,8 @@ using System;
 
 public partial class Menu_Play : Control
 {
+	[Export]
+	string scene_prefix = "res://Arenas/";
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
@@ -39,17 +41,19 @@ public partial class Menu_Play : Control
 	}
 
 	public void OnLaunch(string gamemode){
-		// return to start scene
-		string scene_name = "res://";
+		string scene_name = scene_prefix;
 		switch(gamemode){
 			case "Labyrinth1":
+				scene_name += "Paths/";
 				scene_name += gamemode;
 				break;
 			case "Arena":
-				scene_name += gamemode;
+				scene_name += "Dojos/";
+				scene_name += "simple_dojo";//gamemode;
 				//Add IP address
 				break;
 			case "Labyrinth":
+				scene_name += "Paths/";
 				scene_name += gamemode;
 				//Join a default IP
 				// for testing, it can join the labyrinth set in options or something

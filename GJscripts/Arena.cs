@@ -32,7 +32,7 @@ public interface IArenaObject{
 	public Marker3D GetSelfPositionTargetMarket();
 }
 
-public abstract partial class Arena : Node3D
+public abstract partial class Arena : Level
 {
 
 	[Signal]
@@ -80,6 +80,7 @@ public abstract partial class Arena : Node3D
 
 	public override async void _Ready()
 	{
+		base._Ready();
 		if(!CharacterInformation.InformationInitiated){
 			CharacterInformation.InitializeCharacterInformation();
 			CharacterInformation.active_scene = this.Name;

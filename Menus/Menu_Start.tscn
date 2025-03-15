@@ -73,6 +73,8 @@ offset_left = 1039.0
 offset_top = 2.0
 offset_right = 1152.0
 offset_bottom = 25.0
+text = "V0.1"
+horizontal_alignment = 2
 
 [connection signal="pressed" from="TextureRect/Play" to="." method="_on_play_pressed"]
 [connection signal="pressed" from="TextureRect/Library" to="." method="_on_library_pressed"]

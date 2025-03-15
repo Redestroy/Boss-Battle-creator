@@ -26,6 +26,9 @@ public partial class Player : Character, IDamageable
 
 	[Signal]
 	public delegate void SaveStageEventHandler();
+	
+	[Signal]
+	public delegate void PauseEventHandler();
 
 	[Export]
 	public bool is_active = false;
@@ -51,7 +54,6 @@ public partial class Player : Character, IDamageable
 	private static Player active_player;
 	private bool constrained;
 
-	private Weapon weapon;
 	private RayCast3D raycast;
 	private float rayLength = 10.0f; // Length of the ray
 
@@ -94,14 +96,17 @@ public partial class Player : Character, IDamageable
 		OnDamage(initial_damage);
 		hud.UpdateLifeBar();
 
+		
+
 		camera = GetNode<Camera3D>("Marker3D/Camera3D");
-		weapon = GetNode<Weapon>("Pivot/WeaponPivot/Weapon");
+		//weapon = GetNodeOrNull<Weapon>("Pivot/WeaponPivot/WeaponMarker/Weapon");
 		this.ArenaAlias = "Player"; //export
 		arena = Character.GetRoot(this).GetNodeOrNull("Arena") as Arena;
 		GD.Print($"Arena {arena}"); // Add a case for overworld
 		if(arena != null){
 			arena.SigVictory += HUD_VictoryUpdate;
 			arena.SigDefeat += HUD_DefeatUpdate;
+			this.Pause += arena._on_pause;
 		}
 		if(CharacterInformation.previous_scene != ""){
 			OnSceneEntered();
@@ -134,21 +139,27 @@ public partial class Player : Character, IDamageable
 
 			if (Input.IsActionPressed("Grow"))
 			{
-				//this.SetScale(3.0f);
+				this.SetScale(3.0f);
 				OnDamage(-1);
 			}
 
 			if (Input.IsActionPressed("Shrink"))
 			{
-				//this.SetScale(0.3f);
+				this.SetScale(0.3f);
 				OnDamage(1);
 			}
 
 			if (Input.IsActionPressed("Normalize"))
 			{
-				//this.SetScale(1f);
+				this.SetScale(1f);
 				heart.Health = 100;
 				OnDamage(0);
+			}
+
+			if (Input.IsActionPressed("Pause"))
+			{
+				EmitSignal(SignalName.Pause);
+				GD.Print("Pausing");
 			}
 			//raycast. .CastTo = new Vector3(0, -rayLength, 0); // Pointing downwards
 			//raycast.Enabled = true;
@@ -479,7 +490,7 @@ public partial class Player : Character, IDamageable
 	public override void OnCollidedWithWeapon(Weapon collider)
 	{
 		GD.Print($"Collider layer {collider.CollisionLayer}");
-		if(weapon.IsNodeReady() && weapon.IsEquipped){
+		if(collider.IsNodeReady() && collider.IsEquipped){
 			GD.Print("Hit a weapon");
 			this.OnDamage(collider.Damage);
 		}

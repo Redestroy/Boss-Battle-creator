@@ -1,8 +1,7 @@
-[gd_scene load_steps=13 format=3 uid="uid://7lgd033g0ab"]
+[gd_scene load_steps=11 format=3 uid="uid://7lgd033g0ab"]
 
 [ext_resource type="Script" uid="uid://dsnt16gwdlg8o" path="res://PlayerGeneric.cs" id="1_8qe6d"]
-[ext_resource type="PackedScene" uid="uid://gvkw8kadhsux" path="res://hud_player.tscn" id="2_c30hd"]
-[ext_resource type="PackedScene" uid="uid://dpf1uemx8po85" path="res://Weapons/WeaponChakram.tscn" id="2_xxkxc"]
+[ext_resource type="PackedScene" uid="uid://gvkw8kadhsux" path="res://UI/hud_player.tscn" id="2_c30hd"]
 [ext_resource type="AnimationLibrary" uid="uid://yn7mifk1n4gb" path="res://Assets/Animations/A_Slime.res" id="6_c4mf8"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_p8sg2"]
@@ -19,14 +18,13 @@ albedo_color = Color(1, 1, 0.356863, 1)
 [sub_resource type="BoxMesh" id="BoxMesh_jwpb5"]
 material = SubResource("StandardMaterial3D_io4ja")
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_e507q"]
-
 [sub_resource type="SphereMesh" id="SphereMesh_tevcw"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rmrvt"]
 albedo_color = Color(1, 0.0196078, 0.152941, 1)
 
 [node name="Player" type="CharacterBody3D"]
+process_mode = 1
 collision_layer = 2
 collision_mask = 1981
 axis_lock_angular_x = true
@@ -62,17 +60,10 @@ attachments/0/offset = Vector3(0.5, 0.5, -0.5)
 mesh = SubResource("BoxMesh_jwpb5")
 
 [node name="WeaponPivot" type="Marker3D" parent="Pivot"]
-
-[node name="Weapon" parent="Pivot/WeaponPivot" instance=ExtResource("2_xxkxc")]
-transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0.0232857, -2.21867)
-visible = false
-collision_layer = 64
-collision_mask = 444
-physics_material_override = SubResource("PhysicsMaterial_e507q")
-Damage = 10
+transform = Transform3D(0.0318984, 1.35042e-07, 0.999491, -0.277425, 0.960707, 0.00885378, -0.960218, -0.277566, 0.030645, 0, 0, 0)
 
 [node name="WeaponMarker" type="Marker3D" parent="Pivot/WeaponPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.992383, 0.135993, -1.24908)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4.45422)
 
 [node name="Marker3D" type="Marker3D" parent="."]
 transform = Transform3D(0.998341, -0.0338385, 0.0465679, 2.96104e-09, 0.808976, 0.587842, -0.0575639, -0.586867, 0.807635, 0, 0, 0)

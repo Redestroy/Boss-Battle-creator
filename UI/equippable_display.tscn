@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://t1d1ah5vsh8t"]
 
 [ext_resource type="Script" uid="uid://c7nbb7tkwds4d" path="res://UI/EquippableDisplay.cs" id="1_oxlgc"]
-[ext_resource type="PackedScene" uid="uid://dgmrt605n406" path="res://Weapons/Moves/Move_UI.tscn" id="2_2vv21"]
+[ext_resource type="PackedScene" uid="uid://dgmrt605n406" path="res://Equipment/Weapons/Moves/Move_UI.tscn" id="2_2vv21"]
 
 [node name="EquippableDisplay" type="Control"]
 custom_minimum_size = Vector2(205, 250)
