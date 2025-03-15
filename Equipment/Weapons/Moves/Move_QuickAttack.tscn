@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://cqscdbq776n2d"]
+
+[ext_resource type="Script" uid="uid://byby5cgrq8s2k" path="res://Equipment/Weapons/Moves/MoveUi.cs" id="1_8o6ck"]
+[ext_resource type="PackedScene" uid="uid://dgmrt605n406" path="res://Equipment/Weapons/Moves/Move_UI.tscn" id="1_aydi8"]
+[ext_resource type="Resource" uid="uid://t6gj7jjctv5j" path="res://Equipment/Weapons/Moves/Move_QuickAttack.tres" id="2_n8gyx"]
+
+[node name="QuickAttack" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_8o6ck")
+moveInfo = ExtResource("2_n8gyx")
+
+[node name="Move_UI" parent="." instance=ExtResource("1_aydi8")]
+layout_mode = 1
+offset_bottom = -59.0
+moveInfo = ExtResource("2_n8gyx")

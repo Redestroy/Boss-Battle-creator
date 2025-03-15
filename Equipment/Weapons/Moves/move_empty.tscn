@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://bcicew0b4qdyu"]
+
+[ext_resource type="Script" uid="uid://byby5cgrq8s2k" path="res://Equipment/Weapons/Moves/MoveUi.cs" id="1_ng25h"]
+[ext_resource type="PackedScene" uid="uid://dgmrt605n406" path="res://Equipment/Weapons/Moves/Move_UI.tscn" id="2_jcx4b"]
+
+[node name="Move_Empty" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ng25h")
+
+[node name="Move_UI" parent="." instance=ExtResource("2_jcx4b")]
+layout_mode = 1
+offset_top = -324.0
+offset_bottom = -230.0

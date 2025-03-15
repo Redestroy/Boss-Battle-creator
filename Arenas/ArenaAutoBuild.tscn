@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://b3b86tfboso7h"]
+
+[ext_resource type="Script" uid="uid://dxtvtmug8v4pe" path="res://Arenas/ArenaAutoBuild.cs" id="1_eavwm"]
+[ext_resource type="PackedScene" uid="uid://7lgd033g0ab" path="res://PlayerGeneric.tscn" id="2_a36df"]
+
+[node name="Arena" type="Node3D"]
+script = ExtResource("1_eavwm")
+
+[node name="Player" parent="." instance=ExtResource("2_a36df")]

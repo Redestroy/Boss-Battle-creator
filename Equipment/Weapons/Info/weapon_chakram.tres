@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EquippableInfo" load_steps=2 format=3 uid="uid://3o5wiwwhduyb"]
+
+[ext_resource type="Script" uid="uid://chnfc276oxnju" path="res://Equipment/EquippableInfo.cs" id="1_dmnxi"]
+
+[resource]
+script = ExtResource("1_dmnxi")
+Display_label = "WeaponChakram"
+Alias_label = "WeaponChakram"
+EquippableDescription = "Simple but dangerous, chakram is a whirlwind of destruction in the right hands."
+EquippableType = "Weapon"
+ItemPath = ""
+number_of_slots = 4
+slots = Array[Object]([])
+slot_names = null
+metadata/_custom_type_script = "uid://chnfc276oxnju"

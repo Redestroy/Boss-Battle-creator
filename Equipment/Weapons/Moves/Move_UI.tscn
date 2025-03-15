@@ -1,0 +1,77 @@
+[gd_scene load_steps=5 format=3 uid="uid://dgmrt605n406"]
+
+[ext_resource type="Script" uid="uid://byby5cgrq8s2k" path="res://Equipment/Weapons/Moves/MoveUi.cs" id="1_4r8cy"]
+[ext_resource type="Texture2D" uid="uid://c6kb0f863t8k1" path="res://Assets/Paint/MiniCardBackground.png" id="2_kct6y"]
+[ext_resource type="Texture2D" uid="uid://c7p6mgh4p5pgs" path="res://Assets/Paint/CardCooldown.png" id="4_xdovn"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_kula2"]
+
+[node name="Move_UI" type="Control"]
+custom_minimum_size = Vector2(50, 94)
+layout_mode = 3
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -152.0
+offset_right = 50.0
+offset_bottom = -58.0
+grow_vertical = 2
+size_flags_horizontal = 2
+size_flags_vertical = 2
+script = ExtResource("1_4r8cy")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+offset_left = 5.0
+offset_top = 27.0
+offset_right = 45.0
+offset_bottom = 67.0
+texture = ExtResource("2_kct6y")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 50.0
+offset_bottom = 94.0
+alignment = 1
+
+[node name="Label_Ctrl" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 2
+label_settings = SubResource("LabelSettings_kula2")
+horizontal_alignment = 1
+text_overrun_behavior = 1
+
+[node name="TextureRect" type="TextureRect" parent="VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_kct6y")
+stretch_mode = 2
+
+[node name="Label_Alias" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 10
+horizontal_alignment = 1
+vertical_alignment = 2
+text_overrun_behavior = 1
+
+[node name="Cooldown" type="TextureProgressBar" parent="."]
+visible = false
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 250.0
+scale = Vector2(0.4, 0.4)
+fill_mode = 5
+texture_progress = ExtResource("4_xdovn")
+tint_progress = Color(0.313726, 0.313726, 0.313726, 0.760784)
+
+[node name="Timer" type="Timer" parent="."]
+unique_name_in_owner = true

@@ -1,0 +1,65 @@
+[gd_scene load_steps=8 format=3 uid="uid://weqomdw8vilo"]
+
+[ext_resource type="Script" uid="uid://tuivupabj6v1" path="res://Characters/Mob.cs" id="1_wuidf"]
+[ext_resource type="Resource" uid="uid://r5brcqovx8l2" path="res://Bosses/StateMachines/state_machine_TestMob_Item.tres" id="2_n127h"]
+[ext_resource type="PackedScene" uid="uid://dpf1uemx8po85" path="res://Equipment/Weapons/WeaponChakram.tscn" id="2_wmqrp"]
+[ext_resource type="PackedScene" uid="uid://coict4ed7fjv7" path="res://Items/item.tscn" id="3_nge20"]
+[ext_resource type="ArrayMesh" uid="uid://dv6nhjgjkx5xm" path="res://Assets/Meshes/Blender/Bean1_clear.obj" id="4_p4ygk"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_gthv5"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6sv3f"]
+radius = 0.3
+height = 1.0
+
+[node name="TestMob" type="CharacterBody3D" node_paths=PackedStringArray("Weapon", "MobItem")]
+process_mode = 1
+collision_layer = 8
+collision_mask = 1271
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+slide_on_ceiling = false
+platform_on_leave = 2
+script = ExtResource("1_wuidf")
+Weapon = NodePath("Pivot/WeaponMarker/WeaponChakram")
+MobItem = NodePath("Item")
+MaxHealth = 5
+InitialHealth = 1
+Warcry = "(This mob silently stares at you)"
+stateMachine_ = ExtResource("2_n127h")
+scene_path = "res://Characters/TestMob/TestMob_Item.tscn"
+ArenaAlias = "TestMob_Item"
+
+[node name="Item" parent="." instance=ExtResource("3_nge20")]
+transform = Transform3D(0.566668, 0.723765, 0.393765, -0.787376, 0.616473, 0, -0.242746, -0.310042, 0.919211, 0.0779276, 0, -0.255154)
+node_path = "res://Equipment/Weapons/WeaponChakram.tscn"
+PickupType = "Equippable"
+
+[node name="Pivot" type="Node3D" parent="."]
+
+[node name="Character" type="Node3D" parent="Pivot"]
+
+[node name="Self" type="Marker3D" parent="Pivot/Character"]
+
+[node name="ItemMarker" type="Marker3D" parent="Pivot/Character"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.247828, 0.0100237, -0.734161)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Pivot/Character"]
+transform = Transform3D(1.3209, -2.69355, 0, 2.69355, 1.3209, 0, 0, 0, 3, 0, 0, 0)
+mesh = ExtResource("4_p4ygk")
+skeleton = NodePath("../..")
+
+[node name="WeaponMarker" type="Marker3D" parent="Pivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.231481, 0.170946, -0.366439)
+
+[node name="WeaponChakram" parent="Pivot/WeaponMarker" instance=ExtResource("2_wmqrp")]
+transform = Transform3D(0.0631434, 0.0764462, -0.0129958, 0, -0.0167595, -0.0985856, -0.0775429, 0.0622503, -0.0105825, 0, 0, 0)
+collision_layer = 256
+collision_mask = 242
+physics_material_override = SubResource("PhysicsMaterial_gthv5")
+Damage = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(0.469666, -1.15966, 0.00838427, 1.09283, 0.445605, 0.415469, -0.388063, -0.148634, 1.18016, 0, 0, 0)
+shape = SubResource("CapsuleShape3D_6sv3f")
